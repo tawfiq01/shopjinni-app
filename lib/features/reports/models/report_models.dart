@@ -1,0 +1,411 @@
+class StockReportRow {
+  const StockReportRow({
+    required this.skuId,
+    required this.sku,
+    required this.displayName,
+    required this.brand,
+    required this.model,
+    required this.color,
+    required this.productType,
+    required this.quantity,
+    required this.demoQuantity,
+    required this.reorderLevel,
+    required this.isLowStock,
+    required this.imeiTrackingEnabled,
+    this.unitCost,
+    this.value,
+  });
+
+  factory StockReportRow.fromJson(Map<String, dynamic> json) => StockReportRow(
+        skuId: json['sku_id'] as int,
+        sku: json['sku'] as String,
+        displayName: json['display_name'] as String,
+        brand: json['brand'] as String,
+        model: json['model'] as String,
+        color: json['color'] as String,
+        productType: json['product_type'] as String,
+        quantity: json['quantity'] as int,
+        demoQuantity: json['demo_quantity'] as int? ?? 0,
+        reorderLevel: json['reorder_level'] as int,
+        isLowStock: json['is_low_stock'] as bool,
+        imeiTrackingEnabled: json['imei_tracking_enabled'] as bool,
+        unitCost: json['unit_cost'] == null ? null : (json['unit_cost'] as num).toDouble(),
+        value: json['value'] == null ? null : (json['value'] as num).toDouble(),
+      );
+
+  final int skuId;
+  final String sku;
+  final String displayName;
+  final String brand;
+  final String model;
+  final String color;
+  final String productType;
+  final int quantity;
+  /// How many of [quantity] are marked as demo/display units.
+  final int demoQuantity;
+  final int reorderLevel;
+  final bool isLowStock;
+  final bool imeiTrackingEnabled;
+  /// Null when the viewer lacks reports.view-cost.
+  final double? unitCost;
+  final double? value;
+}
+
+class StockReport {
+  const StockReport({required this.rows, this.totalValue});
+
+  factory StockReport.fromJson(Map<String, dynamic> json) => StockReport(
+        rows: (json['data'] as List<dynamic>)
+            .map((e) => StockReportRow.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        totalValue: json['total_value'] == null ? null : (json['total_value'] as num).toDouble(),
+      );
+
+  final List<StockReportRow> rows;
+  final double? totalValue;
+}
+
+class DailyTotal {
+  const DailyTotal({required this.date, required this.total, required this.count});
+
+  factory DailyTotal.fromJson(Map<String, dynamic> json) => DailyTotal(
+        date: json['date'] as String,
+        total: (json['total'] as num).toDouble(),
+        count: json['count'] as int,
+      );
+
+  final String date;
+  final double total;
+  final int count;
+}
+
+class SalesGroupTotal {
+  const SalesGroupTotal({required this.name, required this.quantity, required this.total});
+
+  factory SalesGroupTotal.fromJson(Map<String, dynamic> json, String nameKey) => SalesGroupTotal(
+        name: json[nameKey] as String,
+        quantity: json['quantity'] as int,
+        total: (json['total'] as num).toDouble(),
+      );
+
+  final String name;
+  final int quantity;
+  final double total;
+}
+
+class NamedTotal {
+  const NamedTotal({required this.name, required this.total, required this.count});
+
+  factory NamedTotal.fromJson(Map<String, dynamic> json) => NamedTotal(
+        name: json['name'] as String,
+        total: (json['total'] as num).toDouble(),
+        count: json['count'] as int,
+      );
+
+  final String name;
+  final double total;
+  final int count;
+}
+
+class SalesSummary {
+  const SalesSummary({
+    required this.from,
+    required this.to,
+    required this.invoiceCount,
+    required this.totalSales,
+    required this.totalDiscount,
+    required this.totalDue,
+    required this.byDay,
+    required this.byModel,
+    required this.byColor,
+    required this.bySalesperson,
+    required this.byCustomer,
+    this.totalProfit,
+  });
+
+  factory SalesSummary.fromJson(Map<String, dynamic> json) => SalesSummary(
+        from: json['from'] as String,
+        to: json['to'] as String,
+        invoiceCount: json['invoice_count'] as int,
+        totalSales: (json['total_sales'] as num).toDouble(),
+        totalDiscount: (json['total_discount'] as num).toDouble(),
+        totalDue: (json['total_due'] as num).toDouble(),
+        totalProfit: json['total_profit'] == null ? null : (json['total_profit'] as num).toDouble(),
+        byDay: (json['by_day'] as List<dynamic>? ?? [])
+            .map((e) => DailyTotal.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        byModel: (json['by_model'] as List<dynamic>? ?? [])
+            .map((e) => SalesGroupTotal.fromJson(e as Map<String, dynamic>, 'model_name'))
+            .toList(),
+        byColor: (json['by_color'] as List<dynamic>? ?? [])
+            .map((e) => SalesGroupTotal.fromJson(e as Map<String, dynamic>, 'color_name'))
+            .toList(),
+        bySalesperson: (json['by_salesperson'] as List<dynamic>? ?? [])
+            .map((e) => NamedTotal.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        byCustomer: (json['by_customer'] as List<dynamic>? ?? [])
+            .map((e) => NamedTotal.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+
+  final String from;
+  final String to;
+  final int invoiceCount;
+  final double totalSales;
+  final double totalDiscount;
+  final double totalDue;
+  final double? totalProfit;
+  final List<DailyTotal> byDay;
+  final List<SalesGroupTotal> byModel;
+  final List<SalesGroupTotal> byColor;
+  final List<NamedTotal> bySalesperson;
+  final List<NamedTotal> byCustomer;
+}
+
+class DistributorPurchaseTotal {
+  const DistributorPurchaseTotal({required this.distributorName, required this.total, required this.count});
+
+  factory DistributorPurchaseTotal.fromJson(Map<String, dynamic> json) => DistributorPurchaseTotal(
+        distributorName: json['distributor_name'] as String,
+        total: (json['total'] as num).toDouble(),
+        count: json['count'] as int,
+      );
+
+  final String distributorName;
+  final double total;
+  final int count;
+}
+
+class PurchaseProductTotal {
+  const PurchaseProductTotal({
+    required this.skuId,
+    required this.displayName,
+    required this.quantity,
+    required this.total,
+    required this.avgUnitCost,
+  });
+
+  factory PurchaseProductTotal.fromJson(Map<String, dynamic> json) => PurchaseProductTotal(
+        skuId: json['sku_id'] as int,
+        displayName: json['display_name'] as String,
+        quantity: json['quantity'] as int,
+        total: (json['total'] as num).toDouble(),
+        avgUnitCost: (json['avg_unit_cost'] as num).toDouble(),
+      );
+
+  final int skuId;
+  final String displayName;
+  final int quantity;
+  final double total;
+  final double avgUnitCost;
+}
+
+class PurchaseSummary {
+  const PurchaseSummary({
+    required this.from,
+    required this.to,
+    required this.invoiceCount,
+    required this.totalPurchases,
+    required this.totalDue,
+    required this.byDistributor,
+    required this.byProduct,
+  });
+
+  factory PurchaseSummary.fromJson(Map<String, dynamic> json) => PurchaseSummary(
+        from: json['from'] as String,
+        to: json['to'] as String,
+        invoiceCount: json['invoice_count'] as int,
+        totalPurchases: (json['total_purchases'] as num).toDouble(),
+        totalDue: (json['total_due'] as num).toDouble(),
+        byDistributor: (json['by_distributor'] as List<dynamic>? ?? [])
+            .map((e) => DistributorPurchaseTotal.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        byProduct: (json['by_product'] as List<dynamic>? ?? [])
+            .map((e) => PurchaseProductTotal.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+
+  final String from;
+  final String to;
+  final int invoiceCount;
+  final double totalPurchases;
+  final double totalDue;
+  final List<DistributorPurchaseTotal> byDistributor;
+  final List<PurchaseProductTotal> byProduct;
+}
+
+class PurchasePriceHistoryRow {
+  const PurchasePriceHistoryRow({
+    required this.purchaseItemId,
+    required this.date,
+    required this.invoiceNumber,
+    required this.distributorName,
+    required this.quantity,
+    required this.unitCost,
+    required this.remainingQuantity,
+  });
+
+  factory PurchasePriceHistoryRow.fromJson(Map<String, dynamic> json) => PurchasePriceHistoryRow(
+        purchaseItemId: json['purchase_item_id'] as int,
+        date: json['date'] as String,
+        invoiceNumber: json['invoice_number'] as String,
+        distributorName: json['distributor_name'] as String,
+        quantity: json['quantity'] as int,
+        unitCost: (json['unit_cost'] as num).toDouble(),
+        remainingQuantity: json['remaining_quantity'] as int,
+      );
+
+  final int purchaseItemId;
+  final String date;
+  final String invoiceNumber;
+  final String distributorName;
+  final int quantity;
+  final double unitCost;
+  final int remainingQuantity;
+}
+
+class DueRow {
+  const DueRow({required this.id, required this.name, required this.mobile, required this.due});
+
+  factory DueRow.fromJson(Map<String, dynamic> json) => DueRow(
+        id: json['id'] as int,
+        name: json['name'] as String,
+        mobile: json['mobile'] as String,
+        due: (json['due'] as num).toDouble(),
+      );
+
+  final int id;
+  final String name;
+  final String mobile;
+  final double due;
+}
+
+class DuesReport {
+  const DuesReport({
+    required this.customers,
+    required this.distributors,
+    required this.totalCustomerDue,
+    required this.totalDistributorDue,
+  });
+
+  factory DuesReport.fromJson(Map<String, dynamic> json) => DuesReport(
+        customers: (json['customers'] as List<dynamic>? ?? [])
+            .map((e) => DueRow.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        distributors: (json['distributors'] as List<dynamic>? ?? [])
+            .map((e) => DueRow.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        totalCustomerDue: (json['total_customer_due'] as num).toDouble(),
+        totalDistributorDue: (json['total_distributor_due'] as num).toDouble(),
+      );
+
+  final List<DueRow> customers;
+  final List<DueRow> distributors;
+  final double totalCustomerDue;
+  final double totalDistributorDue;
+}
+
+class ImeiHistoryMovement {
+  const ImeiHistoryMovement({
+    required this.date,
+    required this.type,
+    required this.branch,
+    required this.quantityChange,
+    this.unitCost,
+  });
+
+  factory ImeiHistoryMovement.fromJson(Map<String, dynamic> json) => ImeiHistoryMovement(
+        date: json['date'] as String,
+        type: json['type'] as String,
+        branch: json['branch'] as String,
+        quantityChange: json['quantity_change'] as int,
+        unitCost: json['unit_cost'] == null ? null : (json['unit_cost'] as num).toDouble(),
+      );
+
+  final String date;
+  final String type;
+  final String branch;
+  final int quantityChange;
+  final double? unitCost;
+}
+
+class ImeiHistory {
+  const ImeiHistory({
+    required this.unitId,
+    required this.imei1,
+    required this.imei2,
+    required this.status,
+    required this.displayName,
+    required this.distributor,
+    required this.isDemo,
+    required this.movements,
+    this.purchasedAt,
+    this.soldAt,
+    this.purchaseCost,
+  });
+
+  factory ImeiHistory.fromJson(Map<String, dynamic> json) {
+    final unit = json['unit'] as Map<String, dynamic>;
+    return ImeiHistory(
+      unitId: unit['id'] as int,
+      imei1: unit['imei1'] as String,
+      imei2: unit['imei2'] as String?,
+      status: unit['status'] as String,
+      displayName: unit['display_name'] as String,
+      distributor: unit['distributor'] as String,
+      isDemo: unit['is_demo'] as bool? ?? false,
+      purchasedAt: unit['purchased_at'] as String?,
+      soldAt: unit['sold_at'] as String?,
+      purchaseCost:
+          unit['purchase_cost'] == null ? null : (unit['purchase_cost'] as num).toDouble(),
+      movements: (json['movements'] as List<dynamic>? ?? [])
+          .map((e) => ImeiHistoryMovement.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  final int unitId;
+  final String imei1;
+  final String? imei2;
+  final String status;
+  final String displayName;
+  final String distributor;
+  final bool isDemo;
+  final String? purchasedAt;
+  final String? soldAt;
+  final double? purchaseCost;
+  final List<ImeiHistoryMovement> movements;
+}
+
+class StockMovementHistory {
+  const StockMovementHistory({required this.skuId, required this.displayName, required this.movements});
+
+  factory StockMovementHistory.fromJson(Map<String, dynamic> json) {
+    final sku = json['sku'] as Map<String, dynamic>;
+    return StockMovementHistory(
+      skuId: sku['id'] as int,
+      displayName: sku['display_name'] as String,
+      movements: (json['movements'] as List<dynamic>? ?? [])
+          .map((e) => ImeiHistoryMovement.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  final int skuId;
+  final String displayName;
+  final List<ImeiHistoryMovement> movements;
+}
+
+class CashPositionRow {
+  const CashPositionRow({required this.method, required this.accountCode, required this.balance});
+
+  factory CashPositionRow.fromJson(Map<String, dynamic> json) => CashPositionRow(
+        method: json['method'] as String,
+        accountCode: json['account_code'] as String,
+        balance: (json['balance'] as num).toDouble(),
+      );
+
+  final String method;
+  final String accountCode;
+  final double balance;
+}
