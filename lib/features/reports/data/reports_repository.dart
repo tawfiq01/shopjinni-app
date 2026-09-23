@@ -52,6 +52,29 @@ class ReportsRepository {
         return SalesSummary.fromJson(res.data);
       });
 
+  Future<SalesDetailReport> getSalesDetails({DateTime? from, DateTime? to}) => _run(() async {
+        final res = await _dio.get('/reports/sales/details', queryParameters: {
+          if (from != null) 'from': _dateOnly(from),
+          if (to != null) 'to': _dateOnly(to),
+        });
+        return SalesDetailReport.fromJson(res.data);
+      });
+
+  Future<List<int>> exportSalesDetails({DateTime? from, DateTime? to}) => _run(() async {
+        final res = await _dio.get<List<int>>(
+          '/reports/sales/details/export',
+          queryParameters: {
+            if (from != null) 'from': _dateOnly(from),
+            if (to != null) 'to': _dateOnly(to),
+          },
+          options: Options(responseType: ResponseType.bytes),
+        );
+        return res.data!;
+      });
+
+  String _dateOnly(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
   Future<PurchaseSummary> getPurchaseSummary() => _run(() async {
         final res = await _dio.get('/reports/purchases/summary');
         return PurchaseSummary.fromJson(res.data);

@@ -6,6 +6,7 @@ import 'cash_position_screen.dart';
 import 'dues_report_screen.dart';
 import 'imei_history_screen.dart';
 import 'purchase_report_screen.dart';
+import 'sales_detail_report_screen.dart';
 import 'sales_report_screen.dart';
 import 'stock_details_screen.dart';
 import 'stock_report_screen.dart';
@@ -23,6 +24,7 @@ class ReportsHomeScreen extends ConsumerWidget {
       ('Current Stock', Icons.inventory_2_outlined, (_) => const StockReportScreen()),
       ('Current Stock Details', Icons.account_tree_outlined, (_) => const StockDetailsScreen()),
       ('Sales Summary', Icons.point_of_sale_outlined, (_) => const SalesReportScreen()),
+      ('Sales Details Report', Icons.receipt_long_outlined, (_) => const SalesDetailReportScreen()),
       if (canViewPurchaseCost)
         ('Purchase Summary', Icons.shopping_bag_outlined, (_) => const PurchaseReportScreen()),
       ('Customer & Distributor Dues', Icons.account_balance_wallet_outlined, (_) => const DuesReportScreen()),

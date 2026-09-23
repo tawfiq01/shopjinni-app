@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/barcode_scanner_sheet.dart';
 import '../../customers/application/customer_providers.dart';
 import '../../customers/models/customer.dart';
 import '../../purchasing/application/purchase_providers.dart';
@@ -68,6 +69,18 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     } finally {
       if (mounted) setState(() => _searching = false);
     }
+  }
+
+  /// Optional shortcut for the search field: scans a barcode/IMEI via the
+  /// camera and searches for it. Manual typing always still works too.
+  Future<void> _scanAndSearch() async {
+    final scanned = await showBarcodeScannerSheet(
+      context,
+      hintText: 'Point the camera at the barcode/IMEI',
+    );
+    if (scanned == null || !mounted) return;
+    _searchController.text = scanned;
+    await _search(scanned);
   }
 
   void _addToCart(PosCandidate candidate) {
@@ -226,7 +239,11 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                       child: SizedBox(
                           height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2)),
                     )
-                  : null,
+                  : IconButton(
+                      icon: const Icon(Icons.qr_code_scanner),
+                      tooltip: 'Scan barcode/IMEI',
+                      onPressed: _scanAndSearch,
+                    ),
             ),
             onChanged: _search,
             onSubmitted: _search,
@@ -253,9 +270,23 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                           fontWeight: candidate.isDemo ? FontWeight.bold : null,
                         ),
                       ),
-                      subtitle: Text(candidate.isImei
-                          ? 'Tap to add this exact unit'
-                          : 'Available: ${candidate.availableQuantity}'),
+                      subtitle: candidate.isImei
+                          ? const Text('Tap to add this exact unit')
+                          : Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(text: 'Available: ${candidate.availableQuantity}'),
+                                  if (candidate.demoQuantity > 0)
+                                    TextSpan(
+                                      text: ' · ${candidate.demoQuantity} demo',
+                                      style: TextStyle(
+                                        color: Colors.red.shade700,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
                       trailing: Text(candidate.sellingPriceCurrent?.toStringAsFixed(2) ?? '-'),
                       onTap: () => _addToCart(candidate),
                     );
@@ -282,13 +313,24 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           children: [
             Expanded(
               flex: 3,
-              child: Text(
-                line.isDemo ? '${line.displayName} · DEMO' : line.displayName,
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  color: line.isDemo ? Colors.red.shade700 : null,
-                ),
-              ),
+              child: line.isDemo
+                  ? Text(
+                      '${line.displayName} · DEMO',
+                      style: TextStyle(fontWeight: FontWeight.w500, color: Colors.red.shade700),
+                    )
+                  : Text.rich(
+                      TextSpan(
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                        children: [
+                          TextSpan(text: line.displayName),
+                          if (line.demoQuantity > 0)
+                            TextSpan(
+                              text: ' · ${line.demoQuantity} demo in stock',
+                              style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold),
+                            ),
+                        ],
+                      ),
+                    ),
             ),
             if (!line.isImei)
               ValueListenableBuilder<int>(

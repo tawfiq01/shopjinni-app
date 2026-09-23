@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/barcode_scanner_sheet.dart';
 import '../../../catalog/models/catalog_models.dart';
 import '../../data/purchase_repository.dart';
 import 'purchase_item_draft.dart';
@@ -39,6 +40,7 @@ class _ConfigurePurchaseItemDialogState extends State<_ConfigurePurchaseItemDial
   final _discountController = TextEditingController(text: '0');
   final _taxController = TextEditingController(text: '0');
   final _warrantyController = TextEditingController(text: '12');
+  final _demoQuantityController = TextEditingController(text: '0');
   List<_ImeiRowControllers> _imeiRows = [_ImeiRowControllers()];
   String? _error;
 
@@ -62,6 +64,26 @@ class _ConfigurePurchaseItemDialogState extends State<_ConfigurePurchaseItemDial
     });
   }
 
+  /// Optional shortcut for the IMEI 1/2 fields: scans a barcode via the
+  /// camera and pulls out digit runs that look like IMEIs. Manual typing
+  /// always still works — this just saves re-keying long numbers.
+  Future<void> _scanImei(int index) async {
+    final scanned = await showBarcodeScannerSheet(context);
+    if (scanned == null || !mounted) return;
+
+    final digitRuns = RegExp(r'\d{14,16}').allMatches(scanned).map((m) => m.group(0)!).toList();
+    setState(() {
+      if (digitRuns.length >= 2) {
+        _imeiRows[index].imei1.text = digitRuns[0];
+        _imeiRows[index].imei2.text = digitRuns[1];
+      } else if (digitRuns.length == 1) {
+        _imeiRows[index].imei1.text = digitRuns[0];
+      } else {
+        _imeiRows[index].imei1.text = scanned;
+      }
+    });
+  }
+
   @override
   void dispose() {
     _quantityController.dispose();
@@ -69,6 +91,7 @@ class _ConfigurePurchaseItemDialogState extends State<_ConfigurePurchaseItemDial
     _discountController.dispose();
     _taxController.dispose();
     _warrantyController.dispose();
+    _demoQuantityController.dispose();
     super.dispose();
   }
 
@@ -82,6 +105,7 @@ class _ConfigurePurchaseItemDialogState extends State<_ConfigurePurchaseItemDial
     }
 
     var imeis = <ImeiEntry>[];
+    var demoQuantity = 0;
     if (widget.product.imeiTrackingEnabled) {
       imeis = _imeiRows
           .map((row) => ImeiEntry(
@@ -95,6 +119,12 @@ class _ConfigurePurchaseItemDialogState extends State<_ConfigurePurchaseItemDial
         setState(() => _error = 'Every unit needs an IMEI 1.');
         return;
       }
+    } else {
+      demoQuantity = int.tryParse(_demoQuantityController.text.trim()) ?? 0;
+      if (demoQuantity < 0 || demoQuantity > quantity) {
+        setState(() => _error = 'Demo quantity cannot exceed the purchased quantity.');
+        return;
+      }
     }
 
     Navigator.of(context).pop(PurchaseItemDraft(
@@ -105,6 +135,7 @@ class _ConfigurePurchaseItemDialogState extends State<_ConfigurePurchaseItemDial
       tax: double.tryParse(_taxController.text.trim()) ?? 0,
       warrantyMonths: int.tryParse(_warrantyController.text.trim()),
       imeis: imeis,
+      demoQuantity: demoQuantity,
     ));
   }
 
@@ -155,6 +186,17 @@ class _ConfigurePurchaseItemDialogState extends State<_ConfigurePurchaseItemDial
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'Warranty (months)'),
               ),
+              if (!widget.product.imeiTrackingEnabled) ...[
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _demoQuantityController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Demo quantity',
+                    helperText: 'How many of these are demo/display units',
+                  ),
+                ),
+              ],
               if (widget.product.imeiTrackingEnabled) ...[
                 const Divider(height: 24),
                 Text('IMEI entry (${_imeiRows.length} unit(s))',
@@ -169,7 +211,14 @@ class _ConfigurePurchaseItemDialogState extends State<_ConfigurePurchaseItemDial
                           flex: 2,
                           child: TextField(
                             controller: _imeiRows[i].imei1,
-                            decoration: InputDecoration(labelText: 'IMEI 1 · unit ${i + 1}'),
+                            decoration: InputDecoration(
+                              labelText: 'IMEI 1 · unit ${i + 1}',
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.qr_code_scanner, size: 20),
+                                tooltip: 'Scan barcode',
+                                onPressed: () => _scanImei(i),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),

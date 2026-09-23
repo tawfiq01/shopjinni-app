@@ -114,6 +114,14 @@ class _PurchaseDetailScreenState extends ConsumerState<PurchaseDetailScreen> {
                                 ),
                             ],
                           ),
+                        )
+                      else if (item.demoQuantity > 0)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                          child: Text(
+                            '${item.demoQuantity} of ${item.quantity} purchased as demo/display units',
+                            style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold),
+                          ),
                         ),
                     ],
                   ),

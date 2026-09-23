@@ -7,6 +7,7 @@ class PosCandidate {
     this.imei1,
     required this.isDemo,
     this.availableQuantity,
+    this.demoQuantity = 0,
     this.sellingPriceCurrent,
   });
 
@@ -18,6 +19,7 @@ class PosCandidate {
         imei1: json['imei1'] as String?,
         isDemo: json['is_demo'] as bool? ?? false,
         availableQuantity: json['available_quantity'] as int?,
+        demoQuantity: json['demo_quantity'] as int? ?? 0,
         sellingPriceCurrent: json['selling_price_current'] == null
             ? null
             : double.tryParse('${json['selling_price_current']}'),
@@ -30,6 +32,7 @@ class PosCandidate {
   final String? imei1;
   final bool isDemo;
   final int? availableQuantity;
+  final int demoQuantity;
   final double? sellingPriceCurrent;
 
   bool get isImei => kind == 'imei';

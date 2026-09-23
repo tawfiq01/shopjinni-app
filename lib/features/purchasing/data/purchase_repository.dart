@@ -36,6 +36,7 @@ class PurchaseItemInput {
     this.tax,
     this.warrantyMonths,
     this.imeis = const [],
+    this.demoQuantity = 0,
   });
 
   final int productVariantColorId;
@@ -45,6 +46,7 @@ class PurchaseItemInput {
   final double? tax;
   final int? warrantyMonths;
   final List<ImeiEntry> imeis;
+  final int demoQuantity;
 
   Map<String, dynamic> toJson() => {
         'product_variant_color_id': productVariantColorId,
@@ -54,6 +56,7 @@ class PurchaseItemInput {
         'tax': ?tax,
         'warranty_months': ?warrantyMonths,
         if (imeis.isNotEmpty) 'imeis': imeis.map((e) => e.toJson()).toList(),
+        if (demoQuantity > 0) 'demo_quantity': demoQuantity,
       };
 }
 

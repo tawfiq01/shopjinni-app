@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/reports_repository.dart';
@@ -47,6 +48,22 @@ final stockDetailsProvider = FutureProvider.autoDispose<StockReport>((ref) {
 
 final salesSummaryProvider = FutureProvider.autoDispose<SalesSummary>((ref) {
   return ref.watch(reportsRepositoryProvider).getSalesSummary();
+});
+
+// null = the backend's default range (last 30 days).
+class SalesDetailsDateRangeNotifier extends Notifier<DateTimeRange?> {
+  @override
+  DateTimeRange? build() => null;
+
+  void set(DateTimeRange? value) => state = value;
+}
+
+final salesDetailsDateRangeProvider =
+    NotifierProvider<SalesDetailsDateRangeNotifier, DateTimeRange?>(SalesDetailsDateRangeNotifier.new);
+
+final salesDetailsReportProvider = FutureProvider.autoDispose<SalesDetailReport>((ref) {
+  final range = ref.watch(salesDetailsDateRangeProvider);
+  return ref.watch(reportsRepositoryProvider).getSalesDetails(from: range?.start, to: range?.end);
 });
 
 final purchaseSummaryProvider = FutureProvider.autoDispose<PurchaseSummary>((ref) {

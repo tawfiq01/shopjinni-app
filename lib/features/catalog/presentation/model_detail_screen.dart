@@ -178,7 +178,15 @@ class _VariantCard extends ConsumerWidget {
                       avatar: sku.imeiTrackingEnabled
                           ? const Icon(Icons.fingerprint, size: 16)
                           : const Icon(Icons.inventory_2_outlined, size: 16),
-                      label: Text('${sku.color.name} · ${sku.sku}'),
+                      label: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('${sku.color.name} · ${sku.sku}'),
+                          const SizedBox(width: 4),
+                          const Icon(Icons.edit_outlined, size: 14),
+                        ],
+                      ),
+                      tooltip: 'Edit ${sku.color.name} SKU',
                       onPressed: () => _showEditSkuDialog(context, ref, sku),
                     ),
                 ],

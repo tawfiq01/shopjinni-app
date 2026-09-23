@@ -12,6 +12,7 @@ class CartLine {
     this.imei1,
     this.isDemo = false,
     this.availableQuantity,
+    this.demoQuantity = 0,
     int quantity = 1,
     double unitPrice = 0,
     double discount = 0,
@@ -27,6 +28,7 @@ class CartLine {
         imei1: candidate.imei1,
         isDemo: candidate.isDemo,
         availableQuantity: candidate.availableQuantity,
+        demoQuantity: candidate.demoQuantity,
         unitPrice: candidate.sellingPriceCurrent ?? 0,
       );
 
@@ -37,6 +39,7 @@ class CartLine {
   final String? imei1;
   final bool isDemo;
   final int? availableQuantity;
+  final int demoQuantity;
   final ValueNotifier<int> quantity;
   final TextEditingController unitPriceController;
   final TextEditingController discountController;

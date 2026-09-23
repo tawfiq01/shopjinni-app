@@ -143,9 +143,21 @@ class _NewPurchaseScreenState extends ConsumerState<NewPurchaseScreen> {
             Card(
               child: ListTile(
                 title: Text(_items[i].product.displayName),
-                subtitle: Text(
-                  '${_items[i].quantity} × ${_items[i].unitCost.toStringAsFixed(2)} = ${_items[i].lineTotal.toStringAsFixed(2)}'
-                  '${_items[i].imeis.isNotEmpty ? ' · ${_items[i].imeis.length} IMEI(s)' : ''}',
+                subtitle: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: '${_items[i].quantity} × ${_items[i].unitCost.toStringAsFixed(2)} = '
+                            '${_items[i].lineTotal.toStringAsFixed(2)}'
+                            '${_items[i].imeis.isNotEmpty ? ' · ${_items[i].imeis.length} IMEI(s)' : ''}',
+                      ),
+                      if (_items[i].demoQuantity > 0)
+                        TextSpan(
+                          text: ' · ${_items[i].demoQuantity} demo',
+                          style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold),
+                        ),
+                    ],
+                  ),
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline),

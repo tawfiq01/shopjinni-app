@@ -37,6 +37,7 @@ class PurchaseItemSummary {
     required this.sku,
     required this.displayName,
     required this.quantity,
+    required this.demoQuantity,
     required this.remainingQuantity,
     required this.unitCost,
     required this.lineTotal,
@@ -48,6 +49,7 @@ class PurchaseItemSummary {
         sku: json['sku'] as String,
         displayName: json['display_name'] as String,
         quantity: json['quantity'] as int,
+        demoQuantity: json['demo_quantity'] as int? ?? 0,
         remainingQuantity: json['remaining_quantity'] as int,
         unitCost: (json['unit_cost'] as num).toDouble(),
         lineTotal: (json['line_total'] as num).toDouble(),
@@ -60,6 +62,7 @@ class PurchaseItemSummary {
   final String sku;
   final String displayName;
   final int quantity;
+  final int demoQuantity;
   final int remainingQuantity;
   final double unitCost;
   final double lineTotal;

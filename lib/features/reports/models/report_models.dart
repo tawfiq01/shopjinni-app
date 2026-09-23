@@ -162,6 +162,90 @@ class SalesSummary {
   final List<NamedTotal> byCustomer;
 }
 
+class SalesDetailRow {
+  const SalesDetailRow({
+    required this.invoiceNumber,
+    required this.saleDate,
+    required this.sku,
+    required this.displayName,
+    required this.quantity,
+    required this.unitPrice,
+    required this.discount,
+    required this.lineTotal,
+    required this.isDemo,
+    this.customer,
+    this.salesperson,
+    this.branch,
+    this.imei,
+    this.unitCost,
+    this.profit,
+  });
+
+  factory SalesDetailRow.fromJson(Map<String, dynamic> json) => SalesDetailRow(
+        invoiceNumber: json['invoice_number'] as String,
+        saleDate: json['sale_date'] as String,
+        customer: json['customer'] as String?,
+        salesperson: json['salesperson'] as String?,
+        branch: json['branch'] as String?,
+        sku: json['sku'] as String,
+        displayName: json['display_name'] as String,
+        imei: json['imei'] as String?,
+        isDemo: json['is_demo'] as bool? ?? false,
+        quantity: json['quantity'] as int,
+        unitPrice: (json['unit_price'] as num).toDouble(),
+        discount: (json['discount'] as num).toDouble(),
+        lineTotal: (json['line_total'] as num).toDouble(),
+        unitCost: json['unit_cost'] == null ? null : (json['unit_cost'] as num).toDouble(),
+        profit: json['profit'] == null ? null : (json['profit'] as num).toDouble(),
+      );
+
+  final String invoiceNumber;
+  final String saleDate;
+  final String? customer;
+  final String? salesperson;
+  final String? branch;
+  final String sku;
+  final String displayName;
+  final String? imei;
+  final bool isDemo;
+  final int quantity;
+  final double unitPrice;
+  final double discount;
+  final double lineTotal;
+  /// Null when the viewer lacks reports.view-cost.
+  final double? unitCost;
+  final double? profit;
+}
+
+class SalesDetailReport {
+  const SalesDetailReport({
+    required this.from,
+    required this.to,
+    required this.totalQuantity,
+    required this.totalSales,
+    required this.rows,
+    this.totalProfit,
+  });
+
+  factory SalesDetailReport.fromJson(Map<String, dynamic> json) => SalesDetailReport(
+        from: json['from'] as String,
+        to: json['to'] as String,
+        totalQuantity: json['total_quantity'] as int,
+        totalSales: (json['total_sales'] as num).toDouble(),
+        totalProfit: json['total_profit'] == null ? null : (json['total_profit'] as num).toDouble(),
+        rows: (json['rows'] as List<dynamic>? ?? [])
+            .map((e) => SalesDetailRow.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+
+  final String from;
+  final String to;
+  final int totalQuantity;
+  final double totalSales;
+  final double? totalProfit;
+  final List<SalesDetailRow> rows;
+}
+
 class DistributorPurchaseTotal {
   const DistributorPurchaseTotal({required this.distributorName, required this.total, required this.count});
 
