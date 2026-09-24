@@ -1,65 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/auth/auth_repository.dart';
 import '../../core/auth/auth_state.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class RegisterScreen extends ConsumerStatefulWidget {
+  const RegisterScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _companyNameController = TextEditingController();
+  final _companyAddressController = TextEditingController();
+  final _companyPhoneController = TextEditingController();
   bool _obscurePassword = true;
-  bool _openingGoogle = false;
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _companyNameController.dispose();
+    _companyAddressController.dispose();
+    _companyPhoneController.dispose();
     super.dispose();
   }
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    ref.read(authControllerProvider.notifier).login(
-          _emailController.text.trim(),
-          _passwordController.text,
+    ref.read(authControllerProvider.notifier).register(
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          companyName: _companyNameController.text.trim(),
+          companyAddress: _companyAddressController.text.trim().isEmpty
+              ? null
+              : _companyAddressController.text.trim(),
+          companyPhone: _companyPhoneController.text.trim().isEmpty
+              ? null
+              : _companyPhoneController.text.trim(),
         );
-  }
-
-  Future<void> _signInWithGoogle() async {
-    setState(() => _openingGoogle = true);
-    try {
-      final url = await ref.read(authControllerProvider.notifier).googleAuthUrl();
-      final uri = Uri.parse(url);
-      // webOnlyWindowName: '_self' navigates the current tab (ignored on
-      // non-web) — Google redirects back to this same tab afterward, which
-      // is what lets AuthCallbackScreen pick up the resulting token. Only
-      // the web flow is wired up end-to-end for now; mobile needs a deep
-      // link back into the app to complete the same round trip.
-      await launchUrl(uri, webOnlyWindowName: '_self');
-    } on AuthException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
-      }
-    } finally {
-      if (mounted) setState(() => _openingGoogle = false);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     final isLoading = authState.status == AuthStatus.authenticating;
-    final googleError = GoRouterState.of(context).uri.queryParameters['google_error'];
 
     return Scaffold(
       body: SafeArea(
@@ -67,7 +59,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
+              constraints: const BoxConstraints(maxWidth: 460),
               child: Card(
                 elevation: 2,
                 child: Padding(
@@ -85,18 +77,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'MobiShop',
+                          'Create your shop',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         Text(
-                          'Inventory, POS & Accounts',
+                          'Set up your own MobiShop — free to start',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                               ),
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 28),
+                        Text('Your details', style: Theme.of(context).textTheme.titleSmall),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Your name',
+                            prefixIcon: Icon(Icons.person_outline),
+                          ),
+                          validator: (value) =>
+                              (value == null || value.isEmpty) ? 'Your name is required' : null,
+                        ),
+                        const SizedBox(height: 16),
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -114,6 +118,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           decoration: InputDecoration(
                             labelText: 'Password',
                             prefixIcon: const Icon(Icons.lock_outline),
+                            helperText: 'At least 8 characters',
                             suffixIcon: IconButton(
                               icon: Icon(_obscurePassword
                                   ? Icons.visibility_outlined
@@ -122,14 +127,45 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   setState(() => _obscurePassword = !_obscurePassword),
                             ),
                           ),
-                          validator: (value) =>
-                              (value == null || value.isEmpty) ? 'Password is required' : null,
-                          onFieldSubmitted: (_) => isLoading ? null : _submit(),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) return 'Password is required';
+                            if (value.length < 8) return 'At least 8 characters';
+                            return null;
+                          },
                         ),
-                        if (authState.error != null || googleError != null) ...[
+                        const SizedBox(height: 24),
+                        Text('Shop details', style: Theme.of(context).textTheme.titleSmall),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: _companyNameController,
+                          decoration: const InputDecoration(
+                            labelText: 'Shop / company name',
+                            prefixIcon: Icon(Icons.storefront_outlined),
+                          ),
+                          validator: (value) =>
+                              (value == null || value.isEmpty) ? 'Shop name is required' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _companyAddressController,
+                          decoration: const InputDecoration(
+                            labelText: 'Address (optional)',
+                            prefixIcon: Icon(Icons.location_on_outlined),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _companyPhoneController,
+                          keyboardType: TextInputType.phone,
+                          decoration: const InputDecoration(
+                            labelText: 'Phone (optional)',
+                            prefixIcon: Icon(Icons.call_outlined),
+                          ),
+                        ),
+                        if (authState.error != null) ...[
                           const SizedBox(height: 16),
                           Text(
-                            authState.error ?? googleError!,
+                            authState.error!,
                             style: TextStyle(color: Theme.of(context).colorScheme.error),
                           ),
                         ],
@@ -142,35 +178,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   width: 20,
                                   child: CircularProgressIndicator(strokeWidth: 2),
                                 )
-                              : const Text('Log in'),
+                              : const Text('Create shop'),
                         ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            const Expanded(child: Divider()),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                              child: Text('or', style: Theme.of(context).textTheme.bodySmall),
-                            ),
-                            const Expanded(child: Divider()),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        OutlinedButton.icon(
-                          onPressed: _openingGoogle ? null : _signInWithGoogle,
-                          icon: _openingGoogle
-                              ? const SizedBox(
-                                  height: 16,
-                                  width: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Icon(Icons.account_circle_outlined),
-                          label: const Text('Continue with Google'),
-                        ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 12),
                         TextButton(
-                          onPressed: isLoading ? null : () => context.go('/register'),
-                          child: const Text("Don't have a shop yet? Create one"),
+                          onPressed: isLoading ? null : () => context.go('/login'),
+                          child: const Text('Already have an account? Log in'),
                         ),
                       ],
                     ),

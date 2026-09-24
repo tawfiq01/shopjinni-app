@@ -43,9 +43,15 @@ class UserRepository {
         return (res.data['data'] as List).map((e) => StaffUser.fromJson(e)).toList();
       });
 
+  /// /roles now returns full {id,name,permissions,is_system,user_count}
+  /// objects (the Manage Roles screen needs those) — this staff-form
+  /// dropdown only ever needed the bare names, so project them client-side
+  /// rather than adding a second endpoint for the same data.
   Future<List<String>> getRoles() => _run(() async {
         final res = await _dio.get('/roles');
-        return (res.data['data'] as List).cast<String>();
+        return (res.data['data'] as List)
+            .map((e) => (e as Map<String, dynamic>)['name'] as String)
+            .toList();
       });
 
   Future<StaffUser> createUser({

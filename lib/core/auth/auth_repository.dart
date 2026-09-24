@@ -40,6 +40,65 @@ class AuthRepository {
     }
   }
 
+  Future<AuthResult> register({
+    required String name,
+    required String email,
+    required String password,
+    required String companyName,
+    String? companyAddress,
+    String? companyPhone,
+    String deviceName = 'mobishop-app',
+  }) async {
+    final client = ApiClient();
+    try {
+      final response = await client.dio.post('/auth/register', data: {
+        'name': name,
+        'email': email,
+        'password': password,
+        'company_name': companyName,
+        'company_address': ?companyAddress,
+        'company_phone': ?companyPhone,
+        'device_name': deviceName,
+      });
+      final data = response.data as Map<String, dynamic>;
+      return AuthResult(
+        token: data['token'] as String,
+        user: AppUser.fromJson(data['user'] as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      throw AuthException(_extractMessage(e));
+    }
+  }
+
+  Future<String> googleAuthUrl() async {
+    final client = ApiClient();
+    try {
+      final response = await client.dio.get('/auth/google/redirect');
+      return response.data['url'] as String;
+    } on DioException catch (e) {
+      throw AuthException(_extractMessage(e));
+    }
+  }
+
+  Future<AppUser> completeOnboarding({
+    required String token,
+    required String companyName,
+    String? companyAddress,
+    String? companyPhone,
+  }) async {
+    final client = ApiClient(token: token);
+    try {
+      final response = await client.dio.post('/auth/onboarding/complete', data: {
+        'company_name': companyName,
+        'company_address': ?companyAddress,
+        'company_phone': ?companyPhone,
+      });
+      return AppUser.fromJson(response.data['user'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw AuthException(_extractMessage(e));
+    }
+  }
+
   Future<AppUser> me(String token) async {
     final client = ApiClient(token: token);
     try {

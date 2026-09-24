@@ -63,6 +63,66 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
+  Future<void> register({
+    required String name,
+    required String email,
+    required String password,
+    required String companyName,
+    String? companyAddress,
+    String? companyPhone,
+  }) async {
+    state = const AuthState.authenticating();
+    try {
+      final result = await _repository.register(
+        name: name,
+        email: email,
+        password: password,
+        companyName: companyName,
+        companyAddress: companyAddress,
+        companyPhone: companyPhone,
+      );
+      await _tokenStorage.save(result.token);
+      state = AuthState.authenticated(token: result.token, user: result.user);
+    } on AuthException catch (e) {
+      state = AuthState.unauthenticated(error: e.message);
+    }
+  }
+
+  /// Consumes the token handed back in the URL after the Google sign-in
+  /// redirect completes — the user may or may not have a company yet
+  /// (needsOnboarding on the returned user distinguishes the two), so this
+  /// just authenticates; the router decides where to send them next.
+  Future<void> loginWithToken(String token) async {
+    state = const AuthState.authenticating();
+    try {
+      final user = await _repository.me(token);
+      await _tokenStorage.save(token);
+      state = AuthState.authenticated(token: token, user: user);
+    } on AuthException catch (e) {
+      state = AuthState.unauthenticated(error: e.message);
+    }
+  }
+
+  Future<void> completeOnboarding({
+    required String companyName,
+    String? companyAddress,
+    String? companyPhone,
+  }) async {
+    final token = state.token;
+    if (token == null) {
+      throw AuthException('You must be logged in to finish setting up your shop.');
+    }
+    final user = await _repository.completeOnboarding(
+      token: token,
+      companyName: companyName,
+      companyAddress: companyAddress,
+      companyPhone: companyPhone,
+    );
+    state = AuthState.authenticated(token: token, user: user);
+  }
+
+  Future<String> googleAuthUrl() => _repository.googleAuthUrl();
+
   Future<void> logout() async {
     final token = state.token;
     if (token != null) {

@@ -3,7 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../auth/auth_state.dart';
+import '../../features/admin/presentation/admin_shell_screen.dart';
+import '../../features/auth/auth_callback_screen.dart';
 import '../../features/auth/login_screen.dart';
+import '../../features/auth/onboarding_screen.dart';
+import '../../features/auth/register_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/splash/splash_screen.dart';
 
@@ -34,10 +38,26 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (!authState.isAuthenticated) {
-        return path == '/login' ? null : '/login';
+        const publicPaths = {'/login', '/register', '/auth/callback'};
+        return publicPaths.contains(path) ? null : '/login';
       }
 
-      if (path == '/login' || path == '/splash') {
+      // A Super Admin is company-less by design (a platform account, not a
+      // shop owner) — checked before needsOnboarding, which would
+      // otherwise misread that as "signed up, not onboarded yet" and send
+      // them to the shop-onboarding form instead of the admin panel.
+      if (authState.user!.isSuperAdmin) {
+        return path.startsWith('/admin') ? null : '/admin';
+      }
+
+      // Signed up via Google but hasn't entered their shop's details yet —
+      // nothing else in the app is usable without a company.
+      if (authState.user!.needsOnboarding) {
+        return path == '/onboarding' ? null : '/onboarding';
+      }
+
+      const preAuthPaths = {'/login', '/register', '/splash', '/onboarding', '/auth/callback'};
+      if (preAuthPaths.contains(path) || path.startsWith('/admin')) {
         return '/dashboard';
       }
 
@@ -46,7 +66,14 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+      GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
+      GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
+      GoRoute(
+        path: '/auth/callback',
+        builder: (context, state) => AuthCallbackScreen(token: state.uri.queryParameters['token']),
+      ),
       GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
+      GoRoute(path: '/admin', builder: (context, state) => const AdminShellScreen()),
     ],
   );
 });
