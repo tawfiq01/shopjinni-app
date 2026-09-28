@@ -63,6 +63,16 @@ class CatalogRepository {
         return (res.data['data'] as List).map((e) => ProductType.fromJson(e)).toList();
       });
 
+  Future<ProductType> createProductType(String name) => _runAsync(() async {
+        final res = await _dio.post('/catalog/product-types', data: {'name': name});
+        return ProductType.fromJson(res.data['data']);
+      });
+
+  Future<ProductType> updateProductType(int id, {String? name}) => _runAsync(() async {
+        final res = await _dio.put('/catalog/product-types/$id', data: {'name': ?name});
+        return ProductType.fromJson(res.data['data']);
+      });
+
   Future<List<ProductColor>> getColors() => _runAsync(() async {
         final res = await _dio.get('/catalog/colors');
         return (res.data['data'] as List).map((e) => ProductColor.fromJson(e)).toList();

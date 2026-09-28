@@ -21,59 +21,78 @@ class DashboardSummarySection extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Text('Failed to load dashboard summary: $err'),
       ),
-      data: (summary) => Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        children: [
-          _StatCard(
-            icon: Icons.point_of_sale_outlined,
-            label: "Today's Sales",
-            value: summary.today.salesTotal.toStringAsFixed(2),
-            subtitle: '${summary.today.salesCount} invoice(s)'
-                '${summary.today.profit != null ? ' · profit ${summary.today.profit!.toStringAsFixed(2)}' : ''}',
-          ),
-          _StatCard(
-            icon: Icons.calendar_month_outlined,
-            label: "This Month's Sales",
-            value: summary.thisMonth.salesTotal.toStringAsFixed(2),
-            subtitle: '${summary.thisMonth.salesCount} invoice(s)'
-                '${summary.thisMonth.profit != null ? ' · profit ${summary.thisMonth.profit!.toStringAsFixed(2)}' : ''}',
-          ),
-          _StatCard(
-            icon: Icons.warning_amber_outlined,
-            label: 'Low Stock Alerts',
-            value: '${summary.lowStockCount}',
-            highlight: summary.lowStockCount > 0,
-            onTap: () {
-              ref.read(lowStockOnlyProvider.notifier).set(true);
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const StockReportScreen()),
-              );
-            },
-          ),
-          _StatCard(
-            icon: Icons.account_balance_wallet_outlined,
-            label: 'Customer Due',
-            value: summary.totalCustomerDue.toStringAsFixed(2),
-          ),
-          _StatCard(
-            icon: Icons.local_shipping_outlined,
-            label: 'Distributor Due',
-            value: summary.totalDistributorDue.toStringAsFixed(2),
-          ),
-          _StatCard(
-            icon: Icons.account_balance_outlined,
-            label: 'Cash / Bank / MFS',
-            value: summary.cashPositionTotal.toStringAsFixed(2),
-          ),
-        ],
-      ),
+      data: (summary) {
+        const spacing = 12.0;
+        const minCardWidth = 150.0;
+
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = (constraints.maxWidth / minCardWidth).floor().clamp(2, 4);
+            final cardWidth = (constraints.maxWidth - spacing * (columns - 1)) / columns;
+
+            return Wrap(
+              spacing: spacing,
+              runSpacing: spacing,
+              children: [
+                _StatCard(
+                  width: cardWidth,
+                  icon: Icons.point_of_sale_outlined,
+                  label: "Today's Sales",
+                  value: summary.today.salesTotal.toStringAsFixed(2),
+                  subtitle: '${summary.today.salesCount} invoice(s)'
+                      '${summary.today.profit != null ? ' · profit ${summary.today.profit!.toStringAsFixed(2)}' : ''}',
+                ),
+                _StatCard(
+                  width: cardWidth,
+                  icon: Icons.calendar_month_outlined,
+                  label: "This Month's Sales",
+                  value: summary.thisMonth.salesTotal.toStringAsFixed(2),
+                  subtitle: '${summary.thisMonth.salesCount} invoice(s)'
+                      '${summary.thisMonth.profit != null ? ' · profit ${summary.thisMonth.profit!.toStringAsFixed(2)}' : ''}',
+                ),
+                _StatCard(
+                  width: cardWidth,
+                  icon: Icons.warning_amber_outlined,
+                  label: 'Low Stock Alerts',
+                  value: '${summary.lowStockCount}',
+                  highlight: summary.lowStockCount > 0,
+                  onTap: () {
+                    ref.read(lowStockOnlyProvider.notifier).set(true);
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const StockReportScreen()),
+                    );
+                  },
+                ),
+                _StatCard(
+                  width: cardWidth,
+                  icon: Icons.account_balance_wallet_outlined,
+                  label: 'Customer Due',
+                  value: summary.totalCustomerDue.toStringAsFixed(2),
+                ),
+                _StatCard(
+                  width: cardWidth,
+                  icon: Icons.local_shipping_outlined,
+                  label: 'Distributor Due',
+                  value: summary.totalDistributorDue.toStringAsFixed(2),
+                ),
+                _StatCard(
+                  width: cardWidth,
+                  icon: Icons.account_balance_outlined,
+                  label: 'Cash / Bank / MFS',
+                  value: summary.cashPositionTotal.toStringAsFixed(2),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
 
 class _StatCard extends StatelessWidget {
   const _StatCard({
+    required this.width,
     required this.icon,
     required this.label,
     required this.value,
@@ -82,6 +101,7 @@ class _StatCard extends StatelessWidget {
     this.onTap,
   });
 
+  final double width;
   final IconData icon;
   final String label;
   final String value;
@@ -94,7 +114,7 @@ class _StatCard extends StatelessWidget {
     final accentColor = highlight ? Colors.red.shade700 : null;
 
     return SizedBox(
-      width: 170,
+      width: width,
       child: Card(
         color: highlight ? Colors.red.shade50 : null,
         child: InkWell(

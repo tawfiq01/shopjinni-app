@@ -29,7 +29,7 @@ class _AdminShellScreenState extends ConsumerState<AdminShellScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('MobiShop Admin — ${_titles[_index]}'),
+        title: Text('শপজিনি Admin — ${_titles[_index]}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),

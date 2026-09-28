@@ -82,7 +82,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         Text(
-                          'Set up your own MobiShop — free to start',
+                          'Set up your own শপজিনি — free to start',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                 color: Theme.of(context).colorScheme.onSurfaceVariant,

@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../application/company_providers.dart';
 import '../data/company_repository.dart';
 import '../models/company_details.dart';
+import '../models/company_profile_options.dart';
 
 class CompanySettingsScreen extends ConsumerStatefulWidget {
   const CompanySettingsScreen({super.key});
@@ -16,8 +17,13 @@ class CompanySettingsScreen extends ConsumerStatefulWidget {
 class _CompanySettingsScreenState extends ConsumerState<CompanySettingsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _ownerNameController = TextEditingController();
   final _addressController = TextEditingController();
+  final _districtController = TextEditingController();
+  final _countryController = TextEditingController();
   final _phoneController = TextEditingController();
+  String? _currency;
+  String? _timezone;
   bool _initialized = false;
   bool _savingDetails = false;
   bool _uploadingLogo = false;
@@ -27,14 +33,22 @@ class _CompanySettingsScreenState extends ConsumerState<CompanySettingsScreen> {
     if (_initialized) return;
     _initialized = true;
     _nameController.text = company.name;
+    _ownerNameController.text = company.ownerName ?? '';
     _addressController.text = company.address ?? '';
+    _districtController.text = company.district ?? '';
+    _countryController.text = company.country ?? 'Bangladesh';
+    _currency = company.currency ?? 'BDT';
+    _timezone = company.timezone ?? 'Asia/Dhaka';
     _phoneController.text = company.phone ?? '';
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _ownerNameController.dispose();
     _addressController.dispose();
+    _districtController.dispose();
+    _countryController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
@@ -50,7 +64,12 @@ class _CompanySettingsScreenState extends ConsumerState<CompanySettingsScreen> {
     try {
       await ref.read(companyRepositoryProvider).updateCompany(
             name: _nameController.text.trim(),
+            ownerName: _ownerNameController.text.trim().isEmpty ? null : _ownerNameController.text.trim(),
             address: _addressController.text.trim().isEmpty ? null : _addressController.text.trim(),
+            district: _districtController.text.trim().isEmpty ? null : _districtController.text.trim(),
+            country: _countryController.text.trim().isEmpty ? null : _countryController.text.trim(),
+            currency: _currency,
+            timezone: _timezone,
             phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
           );
       ref.invalidate(companyDetailsProvider);
@@ -163,8 +182,41 @@ class _CompanySettingsScreenState extends ConsumerState<CompanySettingsScreen> {
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
+                      controller: _ownerNameController,
+                      decoration: const InputDecoration(labelText: 'Owner name (optional)'),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
                       controller: _addressController,
                       decoration: const InputDecoration(labelText: 'Address (optional)'),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _districtController,
+                      decoration: const InputDecoration(labelText: 'District (optional)'),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _countryController,
+                      decoration: const InputDecoration(labelText: 'Country'),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      initialValue: _currency,
+                      decoration: const InputDecoration(labelText: 'Currency'),
+                      items: CompanyProfileOptions.currencies
+                          .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                          .toList(),
+                      onChanged: (value) => setState(() => _currency = value),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      initialValue: _timezone,
+                      decoration: const InputDecoration(labelText: 'Time zone'),
+                      items: CompanyProfileOptions.timezones
+                          .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                          .toList(),
+                      onChanged: (value) => setState(() => _timezone = value),
                     ),
                     const SizedBox(height: 16),
                     TextFormField(

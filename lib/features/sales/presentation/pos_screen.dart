@@ -305,79 +305,94 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   }
 
   Widget _buildCartRow(CartLine line) {
+    final nameText = line.isDemo
+        ? Text(
+            '${line.displayName} · DEMO',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontWeight: FontWeight.w500, color: Colors.red.shade700),
+          )
+        : Text.rich(
+            TextSpan(
+              style: const TextStyle(fontWeight: FontWeight.w500),
+              children: [
+                TextSpan(text: line.displayName),
+                if (line.demoQuantity > 0)
+                  TextSpan(
+                    text: ' · ${line.demoQuantity} demo in stock',
+                    style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold),
+                  ),
+              ],
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          );
+
+    final quantityControl = !line.isImei
+        ? ValueListenableBuilder<int>(
+            valueListenable: line.quantity,
+            builder: (context, qty, _) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: qty > 1 ? () => setState(() => line.quantity.value--) : null,
+                ),
+                Text('$qty'),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: () => setState(() => line.quantity.value++),
+                ),
+              ],
+            ),
+          )
+        : const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('× 1'));
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
         padding: const EdgeInsets.all(12),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              flex: 3,
-              child: line.isDemo
-                  ? Text(
-                      '${line.displayName} · DEMO',
-                      style: TextStyle(fontWeight: FontWeight.w500, color: Colors.red.shade700),
-                    )
-                  : Text.rich(
-                      TextSpan(
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                        children: [
-                          TextSpan(text: line.displayName),
-                          if (line.demoQuantity > 0)
-                            TextSpan(
-                              text: ' · ${line.demoQuantity} demo in stock',
-                              style: TextStyle(color: Colors.red.shade700, fontWeight: FontWeight.bold),
-                            ),
-                        ],
-                      ),
-                    ),
-            ),
-            if (!line.isImei)
-              ValueListenableBuilder<int>(
-                valueListenable: line.quantity,
-                builder: (context, qty, _) => Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle_outline),
-                      onPressed: qty > 1 ? () => setState(() => line.quantity.value--) : null,
-                    ),
-                    Text('$qty'),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle_outline),
-                      onPressed: () => setState(() => line.quantity.value++),
-                    ),
-                  ],
+            Row(
+              children: [
+                Expanded(child: nameText),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => _removeFromCart(line),
                 ),
-              )
-            else
-              const Padding(padding: EdgeInsets.symmetric(horizontal: 8), child: Text('× 1')),
-            SizedBox(
-              width: 90,
-              child: TextField(
-                controller: line.unitPriceController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Price', isDense: true),
-                onChanged: (_) => setState(() {}),
-              ),
+              ],
             ),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 80,
-              child: TextField(
-                controller: line.discountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Discount', isDense: true),
-                onChanged: (_) => setState(() {}),
-              ),
-            ),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 70,
-              child: Text(line.lineTotal.toStringAsFixed(2), textAlign: TextAlign.right),
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () => _removeFromCart(line),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                quantityControl,
+                SizedBox(
+                  width: 90,
+                  child: TextField(
+                    controller: line.unitPriceController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(labelText: 'Price', isDense: true),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+                SizedBox(
+                  width: 80,
+                  child: TextField(
+                    controller: line.discountController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(labelText: 'Discount', isDense: true),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+                SizedBox(
+                  width: 70,
+                  child: Text(line.lineTotal.toStringAsFixed(2), textAlign: TextAlign.right),
+                ),
+              ],
             ),
           ],
         ),

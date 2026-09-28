@@ -9,6 +9,7 @@ import '../../features/auth/login_screen.dart';
 import '../../features/auth/onboarding_screen.dart';
 import '../../features/auth/register_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
+import '../../features/setup_wizard/presentation/setup_wizard_screen.dart';
 import '../../features/splash/splash_screen.dart';
 
 /// Notifies [GoRouter.refreshListenable] on every auth state change, so the
@@ -56,7 +57,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         return path == '/onboarding' ? null : '/onboarding';
       }
 
-      const preAuthPaths = {'/login', '/register', '/splash', '/onboarding', '/auth/callback'};
+      // Unlike needsOnboarding, this is dismissible — the wizard screen
+      // itself can mark it complete without finishing every step, so
+      // nobody is ever hard-blocked here.
+      if (authState.user!.needsSetupWizard) {
+        return path == '/setup-wizard' ? null : '/setup-wizard';
+      }
+
+      const preAuthPaths = {
+        '/login', '/register', '/splash', '/onboarding', '/auth/callback', '/setup-wizard',
+      };
       if (preAuthPaths.contains(path) || path.startsWith('/admin')) {
         return '/dashboard';
       }
@@ -73,6 +83,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => AuthCallbackScreen(token: state.uri.queryParameters['token']),
       ),
       GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
+      GoRoute(path: '/setup-wizard', builder: (context, state) => const SetupWizardScreen()),
       GoRoute(path: '/admin', builder: (context, state) => const AdminShellScreen()),
     ],
   );

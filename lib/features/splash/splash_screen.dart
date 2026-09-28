@@ -11,9 +11,9 @@ class SplashScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.storefront_rounded, size: 56, color: theme.colorScheme.primary),
+            Image.asset('assets/icon/icon_foreground.png', height: 112),
             const SizedBox(height: 16),
-            Text('MobiShop', style: theme.textTheme.headlineSmall),
+            Text('শপজিনি', style: theme.textTheme.headlineSmall),
             const SizedBox(height: 24),
             const CircularProgressIndicator(),
           ],

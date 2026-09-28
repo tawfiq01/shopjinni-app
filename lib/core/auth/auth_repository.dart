@@ -136,6 +136,52 @@ class AuthRepository {
     }
   }
 
+  Future<AppUser> updateProfile({
+    required String token,
+    required String name,
+    required String email,
+    String? phone,
+  }) async {
+    final client = ApiClient(token: token);
+    try {
+      final response = await client.dio.put('/auth/profile', data: {
+        'name': name,
+        'email': email,
+        'phone': ?phone,
+      });
+      return AppUser.fromJson(response.data['user'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw AuthException(_extractMessage(e));
+    }
+  }
+
+  Future<AppUser> uploadAvatar({
+    required String token,
+    required List<int> bytes,
+    required String filename,
+  }) async {
+    final client = ApiClient(token: token);
+    try {
+      final form = FormData.fromMap({
+        'avatar': MultipartFile.fromBytes(bytes, filename: filename),
+      });
+      final response = await client.dio.post('/auth/profile/avatar', data: form);
+      return AppUser.fromJson(response.data['user'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw AuthException(_extractMessage(e));
+    }
+  }
+
+  Future<AppUser> deleteAvatar({required String token}) async {
+    final client = ApiClient(token: token);
+    try {
+      final response = await client.dio.delete('/auth/profile/avatar');
+      return AppUser.fromJson(response.data['user'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw AuthException(_extractMessage(e));
+    }
+  }
+
   String _extractMessage(DioException e) {
     final data = e.response?.data;
     if (data is Map<String, dynamic>) {

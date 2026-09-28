@@ -78,14 +78,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Icon(
-                          Icons.storefront_rounded,
-                          size: 48,
-                          color: Theme.of(context).colorScheme.primary,
+                        Image.asset(
+                          'assets/icon/icon_foreground.png',
+                          height: 96,
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'MobiShop',
+                          'শপজিনি',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),

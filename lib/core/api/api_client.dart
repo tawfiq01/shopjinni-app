@@ -11,7 +11,7 @@ String _resolveBaseUrl() {
   }
   if (defaultTargetPlatform == TargetPlatform.android) {
     // 10.0.2.2 routes to the host machine's localhost from the Android emulator.
-    return 'http://10.0.2.2:8000/api';
+    return 'http://192.168.80.85:8000/api';
   }
   return 'http://127.0.0.1:8000/api';
 }

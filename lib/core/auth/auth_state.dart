@@ -121,6 +121,45 @@ class AuthController extends Notifier<AuthState> {
     state = AuthState.authenticated(token: token, user: user);
   }
 
+  /// Re-fetches the current user so cached AppUser fields (e.g.
+  /// setupWizardCompleted, changed via a company-level action the auth
+  /// state doesn't otherwise know about) catch up with the backend —
+  /// same pattern completeOnboarding() already uses, just without a
+  /// company-provisioning call attached.
+  Future<void> refreshUser() async {
+    final token = state.token;
+    if (token == null) return;
+    final user = await _repository.me(token);
+    state = AuthState.authenticated(token: token, user: user);
+  }
+
+  Future<void> updateProfile({required String name, required String email, String? phone}) async {
+    final token = state.token;
+    if (token == null) {
+      throw AuthException('You must be logged in to update your profile.');
+    }
+    final user = await _repository.updateProfile(token: token, name: name, email: email, phone: phone);
+    state = AuthState.authenticated(token: token, user: user);
+  }
+
+  Future<void> uploadAvatar({required List<int> bytes, required String filename}) async {
+    final token = state.token;
+    if (token == null) {
+      throw AuthException('You must be logged in to update your profile photo.');
+    }
+    final user = await _repository.uploadAvatar(token: token, bytes: bytes, filename: filename);
+    state = AuthState.authenticated(token: token, user: user);
+  }
+
+  Future<void> deleteAvatar() async {
+    final token = state.token;
+    if (token == null) {
+      throw AuthException('You must be logged in to update your profile photo.');
+    }
+    final user = await _repository.deleteAvatar(token: token);
+    state = AuthState.authenticated(token: token, user: user);
+  }
+
   Future<String> googleAuthUrl() => _repository.googleAuthUrl();
 
   Future<void> logout() async {

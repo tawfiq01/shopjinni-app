@@ -12,19 +12,21 @@ class CatalogHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Catalog'),
           bottom: const TabBar(tabs: [
             Tab(text: 'Models'),
             Tab(text: 'Brands'),
+            Tab(text: 'Categories'),
             Tab(text: 'Colors'),
           ]),
         ),
         body: const TabBarView(children: [
           _ModelsTab(),
           _BrandsTab(),
+          _CategoriesTab(),
           _ColorsTab(),
         ]),
       ),
@@ -144,6 +146,70 @@ class _BrandsTab extends ConsumerWidget {
                     await ref.read(catalogRepositoryProvider).updateBrand(brand.id, name: name);
                     ref.invalidate(brandsProvider);
                     if (context.mounted) showSuccessSnackBar(context, 'Brand updated.');
+                  } on CatalogException catch (e) {
+                    if (context.mounted) showErrorSnackBar(context, e.message);
+                  }
+                },
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _CategoriesTab extends ConsumerWidget {
+  const _CategoriesTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final typesAsync = ref.watch(productTypesProvider);
+
+    return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.add),
+        label: const Text('New Category'),
+        onPressed: () async {
+          final name = await promptForText(context, title: 'New Category', label: 'Category name');
+          if (name == null || name.isEmpty) return;
+          try {
+            await ref.read(catalogRepositoryProvider).createProductType(name);
+            ref.invalidate(productTypesProvider);
+            if (context.mounted) showSuccessSnackBar(context, 'Category created.');
+          } on CatalogException catch (e) {
+            if (context.mounted) showErrorSnackBar(context, e.message);
+          }
+        },
+      ),
+      body: typesAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => Center(child: Text('Failed to load categories: $err')),
+        data: (types) {
+          if (types.isEmpty) {
+            return const Center(child: Text('No categories yet. Add one to get started.'));
+          }
+          return ListView.separated(
+            itemCount: types.length,
+            separatorBuilder: (context, index) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final type = types[index];
+              return ListTile(
+                title: Text(type.name),
+                subtitle: type.isActive ? null : const Text('Inactive'),
+                trailing: const Icon(Icons.edit_outlined, size: 20),
+                onTap: () async {
+                  final name = await promptForText(
+                    context,
+                    title: 'Edit Category',
+                    label: 'Category name',
+                    initialValue: type.name,
+                  );
+                  if (name == null || name.isEmpty || name == type.name) return;
+                  try {
+                    await ref.read(catalogRepositoryProvider).updateProductType(type.id, name: name);
+                    ref.invalidate(productTypesProvider);
+                    if (context.mounted) showSuccessSnackBar(context, 'Category updated.');
                   } on CatalogException catch (e) {
                     if (context.mounted) showErrorSnackBar(context, e.message);
                   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/app_user.dart';
 import '../../core/auth/auth_state.dart';
+import '../../core/theme/theme_controller.dart';
 import '../accounting/presentation/accounts_screen.dart';
 import '../backup/presentation/backup_settings_screen.dart';
 import '../branches/presentation/branches_screen.dart';
@@ -22,6 +23,7 @@ import '../subscription/presentation/subscription_screen.dart';
 import '../users/presentation/users_screen.dart';
 import 'widgets/change_password_dialog.dart';
 import 'widgets/dashboard_summary_section.dart';
+import 'widgets/edit_profile_dialog.dart';
 import 'widgets/subscription_status_banner.dart';
 
 class _ModuleTile {
@@ -66,13 +68,32 @@ class DashboardScreen extends ConsumerWidget {
     final AppUser? user = authState.user;
     final subscriptionAsync = ref.watch(currentSubscriptionProvider);
     final isBlocked = subscriptionAsync.asData?.value.isBlocked ?? false;
+    final isDarkMode = ref.watch(themeModeProvider) == ThemeMode.dark;
     final visibleModules = _modules
         .where((m) => m.requiredPermission == null || (user?.can(m.requiredPermission!) ?? false))
         .toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(user?.companyName ?? 'MobiShop'),
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 16,
+              backgroundImage:
+                  user?.companyLogoUrl != null ? NetworkImage(user!.companyLogoUrl!) : null,
+              child: user?.companyLogoUrl == null
+                  ? const Icon(Icons.storefront_outlined, size: 18)
+                  : null,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                user?.companyName ?? 'শপজিনি',
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
@@ -88,8 +109,14 @@ class DashboardScreen extends ConsumerWidget {
                     MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
                   );
                   break;
+                case 'my_profile':
+                  showEditProfileDialog(context, ref);
+                  break;
                 case 'change_password':
                   showChangePasswordDialog(context, ref);
+                  break;
+                case 'toggle_theme':
+                  ref.read(themeModeProvider.notifier).toggle();
                   break;
                 case 'logout':
                   ref.read(authControllerProvider.notifier).logout();
@@ -114,10 +141,24 @@ class DashboardScreen extends ConsumerWidget {
                 ),
               ],
               const PopupMenuItem(
+                value: 'my_profile',
+                child: ListTile(
+                  leading: Icon(Icons.person_outline),
+                  title: Text('My Profile'),
+                ),
+              ),
+              const PopupMenuItem(
                 value: 'change_password',
                 child: ListTile(
                   leading: Icon(Icons.lock_outline),
                   title: Text('Change Password'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'toggle_theme',
+                child: ListTile(
+                  leading: Icon(isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+                  title: Text(isDarkMode ? 'Light Mode' : 'Dark Mode'),
                 ),
               ),
               const PopupMenuItem(
@@ -139,7 +180,10 @@ class DashboardScreen extends ConsumerWidget {
                 Card(
                   child: ListTile(
                     leading: CircleAvatar(
-                      child: Text(user.name.isNotEmpty ? user.name[0].toUpperCase() : '?'),
+                      backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
+                      child: user.avatarUrl == null
+                          ? Text(user.name.isNotEmpty ? user.name[0].toUpperCase() : '?')
+                          : null,
                     ),
                     title: Text(user.name),
                     subtitle: Text(
@@ -240,7 +284,7 @@ class _BlockedSubscriptionNotice extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final message = switch (subscription.status) {
       'grace' => "Your shop's subscription is in its grace period. Renew now to avoid losing access.",
-      'expired' => "Your shop's subscription has expired. Renew to keep using MobiShop.",
+      'expired' => "Your shop's subscription has expired. Renew to keep using শপজিনি.",
       'suspended' => 'Your shop has been suspended. Contact support for help.',
       _ => "Your shop's subscription needs attention.",
     };

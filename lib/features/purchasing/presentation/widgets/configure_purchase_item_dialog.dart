@@ -141,10 +141,16 @@ class _ConfigurePurchaseItemDialogState extends State<_ConfigurePurchaseItemDial
 
   @override
   Widget build(BuildContext context) {
+    final dialogWidth = (MediaQuery.sizeOf(context).width - 48).clamp(0, 420).toDouble();
+
     return AlertDialog(
-      title: Text(widget.product.displayName),
+      title: Text(
+        widget.product.displayName,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+      ),
       content: SizedBox(
-        width: 420,
+        width: dialogWidth,
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

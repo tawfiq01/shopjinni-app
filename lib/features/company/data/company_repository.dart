@@ -45,13 +45,23 @@ class CompanyRepository {
 
   Future<CompanyDetails> updateCompany({
     required String name,
+    String? ownerName,
     String? address,
+    String? district,
+    String? country,
+    String? currency,
+    String? timezone,
     String? phone,
   }) =>
       _run(() async {
         final res = await _dio.put('/company', data: {
           'name': name,
+          'owner_name': ?ownerName,
           'address': ?address,
+          'district': ?district,
+          'country': ?country,
+          'currency': ?currency,
+          'timezone': ?timezone,
           'phone': ?phone,
         });
         return CompanyDetails.fromJson(res.data as Map<String, dynamic>);
@@ -67,6 +77,11 @@ class CompanyRepository {
 
   Future<CompanyDetails> deleteLogo() => _run(() async {
         final res = await _dio.delete('/company/logo');
+        return CompanyDetails.fromJson(res.data as Map<String, dynamic>);
+      });
+
+  Future<CompanyDetails> completeSetupWizard() => _run(() async {
+        final res = await _dio.post('/company/setup-wizard/complete');
         return CompanyDetails.fromJson(res.data as Map<String, dynamic>);
       });
 }
