@@ -8,6 +8,6 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: MobiShopApp()));
     await tester.pump();
 
-    expect(find.text('MobiShop'), findsOneWidget);
+    expect(find.text('শপজিনি'), findsOneWidget);
   });
 }
