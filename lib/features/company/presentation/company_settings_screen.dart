@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/widgets/image_validation.dart';
 import '../application/company_providers.dart';
 import '../data/company_repository.dart';
 import '../models/company_details.dart';
@@ -87,13 +88,20 @@ class _CompanySettingsScreenState extends ConsumerState<CompanySettingsScreen> {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 800);
     if (picked == null || !mounted) return;
 
+    final bytes = await picked.readAsBytes();
+    if (!mounted) return;
+    final sizeError = validateImageSize(bytes.length);
+    if (sizeError != null) {
+      setState(() => _error = sizeError);
+      return;
+    }
+
     setState(() {
       _uploadingLogo = true;
       _error = null;
     });
 
     try {
-      final bytes = await picked.readAsBytes();
       await ref.read(companyRepositoryProvider).uploadLogo(bytes: bytes, filename: picked.name);
       ref.invalidate(companyDetailsProvider);
     } on CompanyException catch (e) {

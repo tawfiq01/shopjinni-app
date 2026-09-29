@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/auth/app_user.dart';
 import '../../../core/auth/auth_repository.dart';
 import '../../../core/auth/auth_state.dart';
+import '../../../core/widgets/image_validation.dart';
 
 Future<void> showEditProfileDialog(BuildContext context, WidgetRef ref) {
   return showDialog(
@@ -32,13 +33,20 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 800);
     if (picked == null || !mounted) return;
 
+    final bytes = await picked.readAsBytes();
+    if (!mounted) return;
+    final sizeError = validateImageSize(bytes.length);
+    if (sizeError != null) {
+      setState(() => _error = sizeError);
+      return;
+    }
+
     setState(() {
       _uploadingAvatar = true;
       _error = null;
     });
 
     try {
-      final bytes = await picked.readAsBytes();
       await ref.read(authControllerProvider.notifier).uploadAvatar(bytes: bytes, filename: picked.name);
     } on AuthException catch (e) {
       setState(() => _error = e.message);

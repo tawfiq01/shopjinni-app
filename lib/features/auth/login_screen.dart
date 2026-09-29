@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/auth/auth_repository.dart';
 import '../../core/auth/auth_state.dart';
+import '../../core/auth/remember_me_storage.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -17,8 +18,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _rememberMeStorage = RememberMeStorage();
   bool _obscurePassword = true;
   bool _openingGoogle = false;
+  bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberedCredentials();
+  }
+
+  Future<void> _loadRememberedCredentials() async {
+    final remembered = await _rememberMeStorage.read();
+    if (remembered == null || !mounted) return;
+    setState(() {
+      _emailController.text = remembered.$1;
+      _passwordController.text = remembered.$2;
+      _rememberMe = true;
+    });
+  }
 
   @override
   void dispose() {
@@ -29,6 +48,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    if (_rememberMe) {
+      _rememberMeStorage.save(_emailController.text.trim(), _passwordController.text);
+    } else {
+      _rememberMeStorage.clear();
+    }
     ref.read(authControllerProvider.notifier).login(
           _emailController.text.trim(),
           _passwordController.text,
@@ -124,6 +148,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           validator: (value) =>
                               (value == null || value.isEmpty) ? 'Password is required' : null,
                           onFieldSubmitted: (_) => isLoading ? null : _submit(),
+                        ),
+                        CheckboxListTile(
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                          value: _rememberMe,
+                          onChanged: (value) => setState(() => _rememberMe = value ?? false),
+                          title: const Text('Remember me'),
                         ),
                         if (authState.error != null || googleError != null) ...[
                           const SizedBox(height: 16),
