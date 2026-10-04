@@ -7,6 +7,7 @@ class AdminCompany {
     required this.isActive,
     required this.userCount,
     this.subscriptionStatus,
+    this.planId,
     this.planName,
   });
 
@@ -18,6 +19,7 @@ class AdminCompany {
         isActive: json['is_active'] as bool,
         userCount: json['user_count'] as int,
         subscriptionStatus: json['subscription_status'] as String?,
+        planId: json['plan_id'] as int?,
         planName: json['plan_name'] as String?,
       );
 
@@ -28,5 +30,6 @@ class AdminCompany {
   final bool isActive;
   final int userCount;
   final String? subscriptionStatus;
+  final int? planId;
   final String? planName;
 }

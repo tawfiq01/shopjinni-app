@@ -15,7 +15,16 @@ class DistributorsScreen extends ConsumerWidget {
     final canManage = ref.watch(authControllerProvider).user?.can('distributors.manage') ?? false;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Distributors')),
+      appBar: AppBar(
+        title: const Text('Distributors'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh distributors',
+            onPressed: () => _refreshDistributors(context, ref),
+          ),
+        ],
+      ),
       floatingActionButton: canManage
           ? FloatingActionButton.extended(
               icon: const Icon(Icons.add),
@@ -24,7 +33,8 @@ class DistributorsScreen extends ConsumerWidget {
                 final created = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(builder: (_) => const DistributorFormScreen()),
                 );
-                if (created == true) ref.invalidate(distributorsProvider);
+                if (!context.mounted) return;
+                if (created == true) await _refreshDistributors(context, ref);
               },
             )
           : null,
@@ -81,5 +91,16 @@ class DistributorsScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _refreshDistributors(BuildContext context, WidgetRef ref) async {
+    try {
+      final _ = await ref.refresh(distributorsProvider.future);
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not refresh distributors: $error')),
+      );
+    }
   }
 }

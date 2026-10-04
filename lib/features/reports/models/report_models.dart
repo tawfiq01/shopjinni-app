@@ -1,10 +1,11 @@
-class StockReportRow {
+akhon class StockReportRow {
   const StockReportRow({
     required this.skuId,
     required this.sku,
     required this.displayName,
     required this.brand,
     required this.model,
+    required this.variantLabel,
     required this.color,
     required this.productType,
     required this.quantity,
@@ -17,35 +18,41 @@ class StockReportRow {
   });
 
   factory StockReportRow.fromJson(Map<String, dynamic> json) => StockReportRow(
-        skuId: json['sku_id'] as int,
-        sku: json['sku'] as String,
-        displayName: json['display_name'] as String,
-        brand: json['brand'] as String,
-        model: json['model'] as String,
-        color: json['color'] as String,
-        productType: json['product_type'] as String,
-        quantity: json['quantity'] as int,
-        demoQuantity: json['demo_quantity'] as int? ?? 0,
-        reorderLevel: json['reorder_level'] as int,
-        isLowStock: json['is_low_stock'] as bool,
-        imeiTrackingEnabled: json['imei_tracking_enabled'] as bool,
-        unitCost: json['unit_cost'] == null ? null : (json['unit_cost'] as num).toDouble(),
-        value: json['value'] == null ? null : (json['value'] as num).toDouble(),
-      );
+    skuId: json['sku_id'] as int,
+    sku: json['sku'] as String,
+    displayName: json['display_name'] as String,
+    brand: json['brand'] as String,
+    model: json['model'] as String,
+    variantLabel: json['variant_label'] as String? ?? '',
+    color: json['color'] as String,
+    productType: json['product_type'] as String,
+    quantity: json['quantity'] as int,
+    demoQuantity: json['demo_quantity'] as int? ?? 0,
+    reorderLevel: json['reorder_level'] as int,
+    isLowStock: json['is_low_stock'] as bool,
+    imeiTrackingEnabled: json['imei_tracking_enabled'] as bool,
+    unitCost: json['unit_cost'] == null
+        ? null
+        : (json['unit_cost'] as num).toDouble(),
+    value: json['value'] == null ? null : (json['value'] as num).toDouble(),
+  );
 
   final int skuId;
   final String sku;
   final String displayName;
   final String brand;
   final String model;
+  final String variantLabel;
   final String color;
   final String productType;
   final int quantity;
+
   /// How many of [quantity] are marked as demo/display units.
   final int demoQuantity;
   final int reorderLevel;
   final bool isLowStock;
   final bool imeiTrackingEnabled;
+
   /// Null when the viewer lacks reports.view-cost.
   final double? unitCost;
   final double? value;
@@ -55,24 +62,30 @@ class StockReport {
   const StockReport({required this.rows, this.totalValue});
 
   factory StockReport.fromJson(Map<String, dynamic> json) => StockReport(
-        rows: (json['data'] as List<dynamic>)
-            .map((e) => StockReportRow.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        totalValue: json['total_value'] == null ? null : (json['total_value'] as num).toDouble(),
-      );
+    rows: (json['data'] as List<dynamic>)
+        .map((e) => StockReportRow.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    totalValue: json['total_value'] == null
+        ? null
+        : (json['total_value'] as num).toDouble(),
+  );
 
   final List<StockReportRow> rows;
   final double? totalValue;
 }
 
 class DailyTotal {
-  const DailyTotal({required this.date, required this.total, required this.count});
+  const DailyTotal({
+    required this.date,
+    required this.total,
+    required this.count,
+  });
 
   factory DailyTotal.fromJson(Map<String, dynamic> json) => DailyTotal(
-        date: json['date'] as String,
-        total: (json['total'] as num).toDouble(),
-        count: json['count'] as int,
-      );
+    date: json['date'] as String,
+    total: (json['total'] as num).toDouble(),
+    count: json['count'] as int,
+  );
 
   final String date;
   final double total;
@@ -80,9 +93,14 @@ class DailyTotal {
 }
 
 class SalesGroupTotal {
-  const SalesGroupTotal({required this.name, required this.quantity, required this.total});
+  const SalesGroupTotal({
+    required this.name,
+    required this.quantity,
+    required this.total,
+  });
 
-  factory SalesGroupTotal.fromJson(Map<String, dynamic> json, String nameKey) => SalesGroupTotal(
+  factory SalesGroupTotal.fromJson(Map<String, dynamic> json, String nameKey) =>
+      SalesGroupTotal(
         name: json[nameKey] as String,
         quantity: json['quantity'] as int,
         total: (json['total'] as num).toDouble(),
@@ -94,13 +112,17 @@ class SalesGroupTotal {
 }
 
 class NamedTotal {
-  const NamedTotal({required this.name, required this.total, required this.count});
+  const NamedTotal({
+    required this.name,
+    required this.total,
+    required this.count,
+  });
 
   factory NamedTotal.fromJson(Map<String, dynamic> json) => NamedTotal(
-        name: json['name'] as String,
-        total: (json['total'] as num).toDouble(),
-        count: json['count'] as int,
-      );
+    name: json['name'] as String,
+    total: (json['total'] as num).toDouble(),
+    count: json['count'] as int,
+  );
 
   final String name;
   final double total;
@@ -124,29 +146,37 @@ class SalesSummary {
   });
 
   factory SalesSummary.fromJson(Map<String, dynamic> json) => SalesSummary(
-        from: json['from'] as String,
-        to: json['to'] as String,
-        invoiceCount: json['invoice_count'] as int,
-        totalSales: (json['total_sales'] as num).toDouble(),
-        totalDiscount: (json['total_discount'] as num).toDouble(),
-        totalDue: (json['total_due'] as num).toDouble(),
-        totalProfit: json['total_profit'] == null ? null : (json['total_profit'] as num).toDouble(),
-        byDay: (json['by_day'] as List<dynamic>? ?? [])
-            .map((e) => DailyTotal.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        byModel: (json['by_model'] as List<dynamic>? ?? [])
-            .map((e) => SalesGroupTotal.fromJson(e as Map<String, dynamic>, 'model_name'))
-            .toList(),
-        byColor: (json['by_color'] as List<dynamic>? ?? [])
-            .map((e) => SalesGroupTotal.fromJson(e as Map<String, dynamic>, 'color_name'))
-            .toList(),
-        bySalesperson: (json['by_salesperson'] as List<dynamic>? ?? [])
-            .map((e) => NamedTotal.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        byCustomer: (json['by_customer'] as List<dynamic>? ?? [])
-            .map((e) => NamedTotal.fromJson(e as Map<String, dynamic>))
-            .toList(),
-      );
+    from: json['from'] as String,
+    to: json['to'] as String,
+    invoiceCount: json['invoice_count'] as int,
+    totalSales: (json['total_sales'] as num).toDouble(),
+    totalDiscount: (json['total_discount'] as num).toDouble(),
+    totalDue: (json['total_due'] as num).toDouble(),
+    totalProfit: json['total_profit'] == null
+        ? null
+        : (json['total_profit'] as num).toDouble(),
+    byDay: (json['by_day'] as List<dynamic>? ?? [])
+        .map((e) => DailyTotal.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    byModel: (json['by_model'] as List<dynamic>? ?? [])
+        .map(
+          (e) =>
+              SalesGroupTotal.fromJson(e as Map<String, dynamic>, 'model_name'),
+        )
+        .toList(),
+    byColor: (json['by_color'] as List<dynamic>? ?? [])
+        .map(
+          (e) =>
+              SalesGroupTotal.fromJson(e as Map<String, dynamic>, 'color_name'),
+        )
+        .toList(),
+    bySalesperson: (json['by_salesperson'] as List<dynamic>? ?? [])
+        .map((e) => NamedTotal.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    byCustomer: (json['by_customer'] as List<dynamic>? ?? [])
+        .map((e) => NamedTotal.fromJson(e as Map<String, dynamic>))
+        .toList(),
+  );
 
   final String from;
   final String to;
@@ -182,22 +212,24 @@ class SalesDetailRow {
   });
 
   factory SalesDetailRow.fromJson(Map<String, dynamic> json) => SalesDetailRow(
-        invoiceNumber: json['invoice_number'] as String,
-        saleDate: json['sale_date'] as String,
-        customer: json['customer'] as String?,
-        salesperson: json['salesperson'] as String?,
-        branch: json['branch'] as String?,
-        sku: json['sku'] as String,
-        displayName: json['display_name'] as String,
-        imei: json['imei'] as String?,
-        isDemo: json['is_demo'] as bool? ?? false,
-        quantity: json['quantity'] as int,
-        unitPrice: (json['unit_price'] as num).toDouble(),
-        discount: (json['discount'] as num).toDouble(),
-        lineTotal: (json['line_total'] as num).toDouble(),
-        unitCost: json['unit_cost'] == null ? null : (json['unit_cost'] as num).toDouble(),
-        profit: json['profit'] == null ? null : (json['profit'] as num).toDouble(),
-      );
+    invoiceNumber: json['invoice_number'] as String,
+    saleDate: json['sale_date'] as String,
+    customer: json['customer'] as String?,
+    salesperson: json['salesperson'] as String?,
+    branch: json['branch'] as String?,
+    sku: json['sku'] as String,
+    displayName: json['display_name'] as String,
+    imei: json['imei'] as String?,
+    isDemo: json['is_demo'] as bool? ?? false,
+    quantity: json['quantity'] as int,
+    unitPrice: (json['unit_price'] as num).toDouble(),
+    discount: (json['discount'] as num).toDouble(),
+    lineTotal: (json['line_total'] as num).toDouble(),
+    unitCost: json['unit_cost'] == null
+        ? null
+        : (json['unit_cost'] as num).toDouble(),
+    profit: json['profit'] == null ? null : (json['profit'] as num).toDouble(),
+  );
 
   final String invoiceNumber;
   final String saleDate;
@@ -212,6 +244,7 @@ class SalesDetailRow {
   final double unitPrice;
   final double discount;
   final double lineTotal;
+
   /// Null when the viewer lacks reports.view-cost.
   final double? unitCost;
   final double? profit;
@@ -227,12 +260,15 @@ class SalesDetailReport {
     this.totalProfit,
   });
 
-  factory SalesDetailReport.fromJson(Map<String, dynamic> json) => SalesDetailReport(
+  factory SalesDetailReport.fromJson(Map<String, dynamic> json) =>
+      SalesDetailReport(
         from: json['from'] as String,
         to: json['to'] as String,
         totalQuantity: json['total_quantity'] as int,
         totalSales: (json['total_sales'] as num).toDouble(),
-        totalProfit: json['total_profit'] == null ? null : (json['total_profit'] as num).toDouble(),
+        totalProfit: json['total_profit'] == null
+            ? null
+            : (json['total_profit'] as num).toDouble(),
         rows: (json['rows'] as List<dynamic>? ?? [])
             .map((e) => SalesDetailRow.fromJson(e as Map<String, dynamic>))
             .toList(),
@@ -247,9 +283,14 @@ class SalesDetailReport {
 }
 
 class DistributorPurchaseTotal {
-  const DistributorPurchaseTotal({required this.distributorName, required this.total, required this.count});
+  const DistributorPurchaseTotal({
+    required this.distributorName,
+    required this.total,
+    required this.count,
+  });
 
-  factory DistributorPurchaseTotal.fromJson(Map<String, dynamic> json) => DistributorPurchaseTotal(
+  factory DistributorPurchaseTotal.fromJson(Map<String, dynamic> json) =>
+      DistributorPurchaseTotal(
         distributorName: json['distributor_name'] as String,
         total: (json['total'] as num).toDouble(),
         count: json['count'] as int,
@@ -269,7 +310,8 @@ class PurchaseProductTotal {
     required this.avgUnitCost,
   });
 
-  factory PurchaseProductTotal.fromJson(Map<String, dynamic> json) => PurchaseProductTotal(
+  factory PurchaseProductTotal.fromJson(Map<String, dynamic> json) =>
+      PurchaseProductTotal(
         skuId: json['sku_id'] as int,
         displayName: json['display_name'] as String,
         quantity: json['quantity'] as int,
@@ -295,17 +337,23 @@ class PurchaseSummary {
     required this.byProduct,
   });
 
-  factory PurchaseSummary.fromJson(Map<String, dynamic> json) => PurchaseSummary(
+  factory PurchaseSummary.fromJson(Map<String, dynamic> json) =>
+      PurchaseSummary(
         from: json['from'] as String,
         to: json['to'] as String,
         invoiceCount: json['invoice_count'] as int,
         totalPurchases: (json['total_purchases'] as num).toDouble(),
         totalDue: (json['total_due'] as num).toDouble(),
         byDistributor: (json['by_distributor'] as List<dynamic>? ?? [])
-            .map((e) => DistributorPurchaseTotal.fromJson(e as Map<String, dynamic>))
+            .map(
+              (e) =>
+                  DistributorPurchaseTotal.fromJson(e as Map<String, dynamic>),
+            )
             .toList(),
         byProduct: (json['by_product'] as List<dynamic>? ?? [])
-            .map((e) => PurchaseProductTotal.fromJson(e as Map<String, dynamic>))
+            .map(
+              (e) => PurchaseProductTotal.fromJson(e as Map<String, dynamic>),
+            )
             .toList(),
       );
 
@@ -329,7 +377,8 @@ class PurchasePriceHistoryRow {
     required this.remainingQuantity,
   });
 
-  factory PurchasePriceHistoryRow.fromJson(Map<String, dynamic> json) => PurchasePriceHistoryRow(
+  factory PurchasePriceHistoryRow.fromJson(Map<String, dynamic> json) =>
+      PurchasePriceHistoryRow(
         purchaseItemId: json['purchase_item_id'] as int,
         date: json['date'] as String,
         invoiceNumber: json['invoice_number'] as String,
@@ -349,14 +398,19 @@ class PurchasePriceHistoryRow {
 }
 
 class DueRow {
-  const DueRow({required this.id, required this.name, required this.mobile, required this.due});
+  const DueRow({
+    required this.id,
+    required this.name,
+    required this.mobile,
+    required this.due,
+  });
 
   factory DueRow.fromJson(Map<String, dynamic> json) => DueRow(
-        id: json['id'] as int,
-        name: json['name'] as String,
-        mobile: json['mobile'] as String,
-        due: (json['due'] as num).toDouble(),
-      );
+    id: json['id'] as int,
+    name: json['name'] as String,
+    mobile: json['mobile'] as String,
+    due: (json['due'] as num).toDouble(),
+  );
 
   final int id;
   final String name;
@@ -373,15 +427,15 @@ class DuesReport {
   });
 
   factory DuesReport.fromJson(Map<String, dynamic> json) => DuesReport(
-        customers: (json['customers'] as List<dynamic>? ?? [])
-            .map((e) => DueRow.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        distributors: (json['distributors'] as List<dynamic>? ?? [])
-            .map((e) => DueRow.fromJson(e as Map<String, dynamic>))
-            .toList(),
-        totalCustomerDue: (json['total_customer_due'] as num).toDouble(),
-        totalDistributorDue: (json['total_distributor_due'] as num).toDouble(),
-      );
+    customers: (json['customers'] as List<dynamic>? ?? [])
+        .map((e) => DueRow.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    distributors: (json['distributors'] as List<dynamic>? ?? [])
+        .map((e) => DueRow.fromJson(e as Map<String, dynamic>))
+        .toList(),
+    totalCustomerDue: (json['total_customer_due'] as num).toDouble(),
+    totalDistributorDue: (json['total_distributor_due'] as num).toDouble(),
+  );
 
   final List<DueRow> customers;
   final List<DueRow> distributors;
@@ -398,12 +452,15 @@ class ImeiHistoryMovement {
     this.unitCost,
   });
 
-  factory ImeiHistoryMovement.fromJson(Map<String, dynamic> json) => ImeiHistoryMovement(
+  factory ImeiHistoryMovement.fromJson(Map<String, dynamic> json) =>
+      ImeiHistoryMovement(
         date: json['date'] as String,
         type: json['type'] as String,
         branch: json['branch'] as String,
         quantityChange: json['quantity_change'] as int,
-        unitCost: json['unit_cost'] == null ? null : (json['unit_cost'] as num).toDouble(),
+        unitCost: json['unit_cost'] == null
+            ? null
+            : (json['unit_cost'] as num).toDouble(),
       );
 
   final String date;
@@ -440,8 +497,9 @@ class ImeiHistory {
       isDemo: unit['is_demo'] as bool? ?? false,
       purchasedAt: unit['purchased_at'] as String?,
       soldAt: unit['sold_at'] as String?,
-      purchaseCost:
-          unit['purchase_cost'] == null ? null : (unit['purchase_cost'] as num).toDouble(),
+      purchaseCost: unit['purchase_cost'] == null
+          ? null
+          : (unit['purchase_cost'] as num).toDouble(),
       movements: (json['movements'] as List<dynamic>? ?? [])
           .map((e) => ImeiHistoryMovement.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -462,7 +520,11 @@ class ImeiHistory {
 }
 
 class StockMovementHistory {
-  const StockMovementHistory({required this.skuId, required this.displayName, required this.movements});
+  const StockMovementHistory({
+    required this.skuId,
+    required this.displayName,
+    required this.movements,
+  });
 
   factory StockMovementHistory.fromJson(Map<String, dynamic> json) {
     final sku = json['sku'] as Map<String, dynamic>;
@@ -481,9 +543,14 @@ class StockMovementHistory {
 }
 
 class CashPositionRow {
-  const CashPositionRow({required this.method, required this.accountCode, required this.balance});
+  const CashPositionRow({
+    required this.method,
+    required this.accountCode,
+    required this.balance,
+  });
 
-  factory CashPositionRow.fromJson(Map<String, dynamic> json) => CashPositionRow(
+  factory CashPositionRow.fromJson(Map<String, dynamic> json) =>
+      CashPositionRow(
         method: json['method'] as String,
         accountCode: json['account_code'] as String,
         balance: (json['balance'] as num).toDouble(),

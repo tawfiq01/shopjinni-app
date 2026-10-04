@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../application/admin_providers.dart';
 import '../data/admin_repository.dart';
 import '../models/admin_company.dart';
+import '../models/admin_plan.dart';
 
 class AdminShopsScreen extends ConsumerStatefulWidget {
   const AdminShopsScreen({super.key});
@@ -39,6 +40,36 @@ class _AdminShopsScreenState extends ConsumerState<AdminShopsScreen> {
       ref.invalidate(adminCompaniesProvider);
     } on AdminException catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _busyCompanyId = null);
+    }
+  }
+
+  Future<void> _changePlan(AdminCompany company) async {
+    setState(() => _busyCompanyId = company.id);
+    try {
+      final plans = await ref.read(adminPlansProvider.future);
+      if (!mounted) return;
+      final planId = await showDialog<int>(
+        context: context,
+        builder: (context) => _PlanSelectionDialog(
+          plans: plans,
+          currentPlanId: company.planId,
+        ),
+      );
+      if (planId == null || !mounted) return;
+
+      await ref.read(adminRepositoryProvider).setCompanyPlan(company.id, planId);
+      ref.invalidate(adminCompaniesProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Shop package updated.')),
+        );
+      }
+    } on AdminException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      }
     } finally {
       if (mounted) setState(() => _busyCompanyId = null);
     }
@@ -88,6 +119,11 @@ class _AdminShopsScreenState extends ConsumerState<AdminShopsScreen> {
                           onPressed: busy ? null : () => _toggleActive(company),
                           child: Text(company.isActive ? 'Deactivate shop' : 'Activate shop'),
                         ),
+                        OutlinedButton.icon(
+                          onPressed: busy ? null : () => _changePlan(company),
+                          icon: const Icon(Icons.workspace_premium_outlined),
+                          label: const Text('Change package'),
+                        ),
                         if (company.subscriptionStatus == 'suspended')
                           FilledButton(
                             onPressed: busy ? null : () => _setSuspended(company, false),
@@ -107,6 +143,66 @@ class _AdminShopsScreenState extends ConsumerState<AdminShopsScreen> {
           },
         ),
       ),
+    );
+  }
+}
+
+class _PlanSelectionDialog extends StatefulWidget {
+  const _PlanSelectionDialog({required this.plans, required this.currentPlanId});
+
+  final List<AdminPlan> plans;
+  final int? currentPlanId;
+
+  @override
+  State<_PlanSelectionDialog> createState() => _PlanSelectionDialogState();
+}
+
+class _PlanSelectionDialogState extends State<_PlanSelectionDialog> {
+  int? _selectedPlanId;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedPlanId = widget.currentPlanId;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Change shop package'),
+      content: widget.plans.isEmpty
+          ? const Text('No packages are available.')
+          : DropdownButtonFormField<int>(
+              initialValue: widget.plans.any((plan) => plan.id == _selectedPlanId)
+                  ? _selectedPlanId
+                  : null,
+              decoration: const InputDecoration(labelText: 'Package'),
+              items: widget.plans
+                  .map(
+                    (plan) => DropdownMenuItem(
+                      value: plan.id,
+                      child: Text(
+                        '${plan.name} · ৳${plan.monthlyPrice.toStringAsFixed(0)}/mo'
+                        '${plan.isActive ? '' : ' (inactive)'}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (planId) => setState(() => _selectedPlanId = planId),
+            ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _selectedPlanId == null || widget.plans.isEmpty
+              ? null
+              : () => Navigator.of(context).pop(_selectedPlanId),
+          child: const Text('Change package'),
+        ),
+      ],
     );
   }
 }

@@ -41,7 +41,10 @@ class ModelDetailScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _showAddVariantDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showAddVariantDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final ramController = TextEditingController();
     final storageController = TextEditingController();
     final extraController = TextEditingController();
@@ -61,18 +64,28 @@ class ModelDetailScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             TextField(
               controller: storageController,
-              decoration: const InputDecoration(labelText: 'Storage (e.g. 128GB)'),
+              decoration: const InputDecoration(
+                labelText: 'Storage (e.g. 128GB)',
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: extraController,
-              decoration: const InputDecoration(labelText: 'Extra spec (optional)'),
+              decoration: const InputDecoration(
+                labelText: 'Extra spec (optional)',
+              ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Create')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Create'),
+          ),
         ],
       ),
     );
@@ -80,7 +93,9 @@ class ModelDetailScreen extends ConsumerWidget {
     if (created != true || !context.mounted) return;
 
     try {
-      await ref.read(catalogRepositoryProvider).createVariant(
+      await ref
+          .read(catalogRepositoryProvider)
+          .createVariant(
             modelId: modelId,
             ram: ramController.text.trim(),
             storage: storageController.text.trim(),
@@ -110,10 +125,14 @@ class _ModelDetailBody extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${model.brand.name} ${model.name}',
-                    style: Theme.of(context).textTheme.titleLarge),
+                Text(
+                  '${model.brand.name} ${model.name}',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
                 const SizedBox(height: 4),
-                Text('${model.productType.name} · Warranty: ${model.warrantyMonthsDefault ?? '-'} months'),
+                Text(
+                  '${model.productType.name} · Warranty: ${model.warrantyMonthsDefault ?? '-'} months',
+                ),
               ],
             ),
           ),
@@ -121,8 +140,10 @@ class _ModelDetailBody extends ConsumerWidget {
         const SizedBox(height: 16),
         Text('Variants', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 8),
-        if (model.variants.isEmpty) const Text('No variants yet. Use "Add Variant" below.'),
-        for (final variant in model.variants) _VariantCard(model: model, variant: variant),
+        if (model.variants.isEmpty)
+          const Text('No variants yet. Use "Add Variant" below.'),
+        for (final variant in model.variants)
+          _VariantCard(model: model, variant: variant),
       ],
     );
   }
@@ -226,7 +247,9 @@ class _VariantCard extends ConsumerWidget {
                   initialValue: selectedColor,
                   decoration: const InputDecoration(labelText: 'Color'),
                   items: colors
-                      .map((c) => DropdownMenuItem(value: c, child: Text(c.name)))
+                      .map(
+                        (c) => DropdownMenuItem(value: c, child: Text(c.name)),
+                      )
                       .toList(),
                   onChanged: (value) => setState(() => selectedColor = value!),
                 ),
@@ -240,7 +263,9 @@ class _VariantCard extends ConsumerWidget {
                 const SizedBox(height: 12),
                 TextField(
                   controller: barcodeController,
-                  decoration: const InputDecoration(labelText: 'Barcode (optional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Barcode (optional)',
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -251,7 +276,9 @@ class _VariantCard extends ConsumerWidget {
                 const SizedBox(height: 12),
                 TextField(
                   controller: priceController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: const InputDecoration(
                     labelText: 'Selling price / MRP (optional)',
                     prefixText: '৳ ',
@@ -262,7 +289,10 @@ class _VariantCard extends ConsumerWidget {
                   initialValue: imeiOverride,
                   decoration: const InputDecoration(labelText: 'IMEI tracking'),
                   items: const [
-                    DropdownMenuItem(value: null, child: Text('Inherit from model')),
+                    DropdownMenuItem(
+                      value: null,
+                      child: Text('Inherit from model'),
+                    ),
                     DropdownMenuItem(value: true, child: Text('Required')),
                     DropdownMenuItem(value: false, child: Text('Not required')),
                   ],
@@ -272,8 +302,14 @@ class _VariantCard extends ConsumerWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Create')),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Create'),
+            ),
           ],
         ),
       ),
@@ -282,7 +318,9 @@ class _VariantCard extends ConsumerWidget {
     if (created != true || !context.mounted) return;
 
     try {
-      await ref.read(catalogRepositoryProvider).createSku(
+      await ref
+          .read(catalogRepositoryProvider)
+          .createSku(
             variantId: variant.id,
             colorId: selectedColor.id,
             sku: skuController.text.trim(),
@@ -298,7 +336,10 @@ class _VariantCard extends ConsumerWidget {
     }
   }
 
-  Future<void> _showEditVariantDialog(BuildContext context, WidgetRef ref) async {
+  Future<void> _showEditVariantDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final ramController = TextEditingController(text: variant.ram);
     final storageController = TextEditingController(text: variant.storage);
     final extraController = TextEditingController(text: variant.extraSpec);
@@ -318,18 +359,28 @@ class _VariantCard extends ConsumerWidget {
             const SizedBox(height: 12),
             TextField(
               controller: storageController,
-              decoration: const InputDecoration(labelText: 'Storage (e.g. 128GB)'),
+              decoration: const InputDecoration(
+                labelText: 'Storage (e.g. 128GB)',
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: extraController,
-              decoration: const InputDecoration(labelText: 'Extra spec (optional)'),
+              decoration: const InputDecoration(
+                labelText: 'Extra spec (optional)',
+              ),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Save')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Save'),
+          ),
         ],
       ),
     );
@@ -337,7 +388,9 @@ class _VariantCard extends ConsumerWidget {
     if (saved != true || !context.mounted) return;
 
     try {
-      await ref.read(catalogRepositoryProvider).updateVariant(
+      await ref
+          .read(catalogRepositoryProvider)
+          .updateVariant(
             variant.id,
             ram: ramController.text.trim(),
             storage: storageController.text.trim(),
@@ -350,12 +403,28 @@ class _VariantCard extends ConsumerWidget {
     }
   }
 
-  Future<void> _showEditSkuDialog(BuildContext context, WidgetRef ref, ProductSku sku) async {
+  Future<void> _showEditSkuDialog(
+    BuildContext context,
+    WidgetRef ref,
+    ProductSku sku,
+  ) async {
+    final colors = await ref.read(colorsProvider.future);
+    if (!context.mounted) return;
+    if (!colors.any((color) => color.id == sku.color.id)) {
+      colors.insert(0, sku.color);
+    }
+
+    ProductColor selectedColor = colors.firstWhere(
+      (color) => color.id == sku.color.id,
+    );
     final skuController = TextEditingController(text: sku.sku);
     final barcodeController = TextEditingController(text: sku.barcode);
-    final reorderController = TextEditingController(text: sku.reorderLevel.toString());
-    final priceController =
-        TextEditingController(text: sku.sellingPriceCurrent?.toStringAsFixed(2) ?? '');
+    final reorderController = TextEditingController(
+      text: sku.reorderLevel.toString(),
+    );
+    final priceController = TextEditingController(
+      text: sku.sellingPriceCurrent?.toStringAsFixed(2) ?? '',
+    );
     bool? imeiOverride = sku.imeiTrackingOverride;
 
     final saved = await showDialog<bool>(
@@ -368,6 +437,20 @@ class _VariantCard extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                DropdownButtonFormField<ProductColor>(
+                  initialValue: selectedColor,
+                  decoration: const InputDecoration(labelText: 'Color'),
+                  items: colors
+                      .map(
+                        (color) => DropdownMenuItem(
+                          value: color,
+                          child: Text(color.name),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) => setState(() => selectedColor = value!),
+                ),
+                const SizedBox(height: 12),
                 TextField(
                   controller: skuController,
                   autofocus: true,
@@ -376,7 +459,9 @@ class _VariantCard extends ConsumerWidget {
                 const SizedBox(height: 12),
                 TextField(
                   controller: barcodeController,
-                  decoration: const InputDecoration(labelText: 'Barcode (optional)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Barcode (optional)',
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -387,7 +472,9 @@ class _VariantCard extends ConsumerWidget {
                 const SizedBox(height: 12),
                 TextField(
                   controller: priceController,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   decoration: const InputDecoration(
                     labelText: 'Selling price / MRP (optional)',
                     prefixText: '৳ ',
@@ -398,7 +485,10 @@ class _VariantCard extends ConsumerWidget {
                   initialValue: imeiOverride,
                   decoration: const InputDecoration(labelText: 'IMEI tracking'),
                   items: const [
-                    DropdownMenuItem(value: null, child: Text('Inherit from model')),
+                    DropdownMenuItem(
+                      value: null,
+                      child: Text('Inherit from model'),
+                    ),
                     DropdownMenuItem(value: true, child: Text('Required')),
                     DropdownMenuItem(value: false, child: Text('Not required')),
                   ],
@@ -408,8 +498,14 @@ class _VariantCard extends ConsumerWidget {
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-            FilledButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Save')),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Save'),
+            ),
           ],
         ),
       ),
@@ -418,9 +514,12 @@ class _VariantCard extends ConsumerWidget {
     if (saved != true || !context.mounted) return;
 
     try {
-      await ref.read(catalogRepositoryProvider).updateSku(
+      await ref
+          .read(catalogRepositoryProvider)
+          .updateSku(
             sku.id,
             sku: skuController.text.trim(),
+            colorId: selectedColor.id,
             barcode: barcodeController.text.trim(),
             reorderLevel: int.tryParse(reorderController.text.trim()),
             sellingPriceCurrent: double.tryParse(priceController.text.trim()),

@@ -60,6 +60,10 @@ class AdminRepository {
         await _dio.put('/admin/subscriptions/$companyId/status', data: {'status': status});
       });
 
+  Future<void> setCompanyPlan(int companyId, int planId) => _run(() async {
+        await _dio.put('/admin/subscriptions/$companyId/plan', data: {'plan_id': planId});
+      });
+
   Future<List<AdminPlan>> getPlans() => _run(() async {
         final res = await _dio.get('/admin/plans');
         return (res.data['data'] as List<dynamic>).map((e) => AdminPlan.fromJson(e as Map<String, dynamic>)).toList();

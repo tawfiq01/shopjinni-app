@@ -282,57 +282,77 @@ class _StockDetailsColorsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sorted = [...rows]..sort((a, b) => a.color.compareTo(b.color));
+    final byVariant = <String, List<StockReportRow>>{};
+    for (final row in rows) {
+      byVariant.putIfAbsent(row.variantLabel, () => []).add(row);
+    }
+    final variants = byVariant.keys.toList()..sort();
 
     return Scaffold(
       appBar: AppBar(title: Text('$brand $model')),
       body: Column(
         children: [
-          _SummaryBar(countLabel: '${sorted.length} color(s)', rows: sorted),
+          _SummaryBar(countLabel: '${rows.length} color(s)', rows: rows),
           Expanded(
-            child: ListView.separated(
-              itemCount: sorted.length,
-              separatorBuilder: (context, index) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final row = sorted[index];
-                return ListTile(
-                  leading: Icon(row.imeiTrackingEnabled ? Icons.fingerprint : Icons.inventory_2_outlined),
-                  title: Text(row.color),
-                  subtitle: _CountSubtitle(
-                    base: 'SKU: ${row.sku} · Reorder level: ${row.reorderLevel}'
-                        '${row.value != null ? ' · Value: ${row.value!.toStringAsFixed(2)}' : ''}',
-                    demoCount: row.demoQuantity,
+            child: ListView(
+              children: [
+                for (final variant in variants) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Text(
+                      variant.isEmpty ? 'Base variant' : variant,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                   ),
-                  trailing: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        '${row.quantity}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: row.isLowStock ? Colors.red.shade700 : null,
-                        ),
-                      ),
-                      if (row.demoQuantity > 0)
-                        Text(
-                          '${row.demoQuantity} demo',
-                          style: TextStyle(fontSize: 11, color: Colors.red.shade700),
-                        ),
-                    ],
-                  ),
-                  onTap: row.imeiTrackingEnabled
-                      ? null
-                      : () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => StockMovementHistoryScreen(
-                                skuId: row.skuId,
-                                displayName: row.displayName,
-                              ),
-                            ),
+                  for (final row in (byVariant[variant]!..sort((a, b) => a.color.compareTo(b.color))))
+                    Column(
+                      children: [
+                        ListTile(
+                          leading: Icon(
+                            row.imeiTrackingEnabled
+                                ? Icons.fingerprint
+                                : Icons.inventory_2_outlined,
                           ),
-                );
-              },
+                          title: Text(row.color),
+                          subtitle: _CountSubtitle(
+                            base: 'SKU: ${row.sku} · Reorder level: ${row.reorderLevel}'
+                                '${row.value != null ? ' · Value: ${row.value!.toStringAsFixed(2)}' : ''}',
+                            demoCount: row.demoQuantity,
+                          ),
+                          trailing: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '${row.quantity}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: row.isLowStock ? Colors.red.shade700 : null,
+                                ),
+                              ),
+                              if (row.demoQuantity > 0)
+                                Text(
+                                  '${row.demoQuantity} demo',
+                                  style: TextStyle(fontSize: 11, color: Colors.red.shade700),
+                                ),
+                            ],
+                          ),
+                          onTap: row.imeiTrackingEnabled
+                              ? null
+                              : () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => StockMovementHistoryScreen(
+                                        skuId: row.skuId,
+                                        displayName: row.displayName,
+                                      ),
+                                    ),
+                                  ),
+                        ),
+                        const Divider(height: 1),
+                      ],
+                    ),
+                ],
+              ],
             ),
           ),
         ],
