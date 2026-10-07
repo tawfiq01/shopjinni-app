@@ -1,4 +1,4 @@
-akhon class StockReportRow {
+class StockReportRow {
   const StockReportRow({
     required this.skuId,
     required this.sku,
@@ -450,6 +450,12 @@ class ImeiHistoryMovement {
     required this.branch,
     required this.quantityChange,
     this.unitCost,
+    this.saleDate,
+    this.saleInvoiceNumber,
+    this.saleCustomer,
+    this.saleUnitPrice,
+    this.saleDiscount,
+    this.saleTotal,
   });
 
   factory ImeiHistoryMovement.fromJson(Map<String, dynamic> json) =>
@@ -461,6 +467,18 @@ class ImeiHistoryMovement {
         unitCost: json['unit_cost'] == null
             ? null
             : (json['unit_cost'] as num).toDouble(),
+        saleDate: json['sale_date'] as String?,
+        saleInvoiceNumber: json['sale_invoice_number'] as String?,
+        saleCustomer: json['sale_customer'] as String?,
+        saleUnitPrice: json['sale_unit_price'] == null
+            ? null
+            : (json['sale_unit_price'] as num).toDouble(),
+        saleDiscount: json['sale_discount'] == null
+            ? null
+            : (json['sale_discount'] as num).toDouble(),
+        saleTotal: json['sale_total'] == null
+            ? null
+            : (json['sale_total'] as num).toDouble(),
       );
 
   final String date;
@@ -468,6 +486,12 @@ class ImeiHistoryMovement {
   final String branch;
   final int quantityChange;
   final double? unitCost;
+  final String? saleDate;
+  final String? saleInvoiceNumber;
+  final String? saleCustomer;
+  final double? saleUnitPrice;
+  final double? saleDiscount;
+  final double? saleTotal;
 }
 
 class ImeiHistory {

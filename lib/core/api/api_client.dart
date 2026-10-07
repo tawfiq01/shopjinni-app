@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 // Override at build time for a production build, e.g.:
-//   flutter build web --release --dart-define=API_BASE_URL=https://shopjinne.com/api
+//   flutter build web --release --dart-define=API_BASE_URL=https://app.shopjinne.com/api
 // Left blank, every platform falls back to its own local-dev default below.
 const _apiBaseUrlOverride = String.fromEnvironment('API_BASE_URL');
 

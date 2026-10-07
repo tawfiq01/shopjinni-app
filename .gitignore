@@ -46,3 +46,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Packaged deployment bundles (built locally, not source)
+*.tar.gz
+*.zip

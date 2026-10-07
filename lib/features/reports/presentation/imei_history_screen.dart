@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/barcode_scanner_sheet.dart';
 import '../data/reports_repository.dart';
 import '../models/report_models.dart';
 
@@ -32,10 +33,13 @@ class _ImeiHistoryScreenState extends ConsumerState<ImeiHistoryScreen> {
       _searching = true;
       _error = null;
       _searched = true;
+      _history = null;
     });
 
     try {
-      final history = await ref.read(reportsRepositoryProvider).getImeiHistory(imei);
+      final history = await ref
+          .read(reportsRepositoryProvider)
+          .getImeiHistory(imei);
       if (mounted) setState(() => _history = history);
     } on ReportsException catch (e) {
       if (mounted) setState(() => _error = e.message);
@@ -44,24 +48,34 @@ class _ImeiHistoryScreenState extends ConsumerState<ImeiHistoryScreen> {
     }
   }
 
+  Future<void> _scanAndSearch() async {
+    final scanned = await showBarcodeScannerSheet(
+      context,
+      hintText: 'Point the camera at the barcode/IMEI',
+    );
+    if (scanned == null || !mounted) return;
+    _searchController.text = scanned;
+    await _search();
+  }
+
   IconData _iconFor(String type) => switch (type) {
-        'purchase' => Icons.add_shopping_cart_outlined,
-        'sale' => Icons.point_of_sale_outlined,
-        'sales_return' => Icons.assignment_return_outlined,
-        'purchase_return' => Icons.local_shipping_outlined,
-        'transfer_out' || 'transfer_in' => Icons.compare_arrows,
-        _ => Icons.circle_outlined,
-      };
+    'purchase' => Icons.add_shopping_cart_outlined,
+    'sale' => Icons.point_of_sale_outlined,
+    'sales_return' => Icons.assignment_return_outlined,
+    'purchase_return' => Icons.local_shipping_outlined,
+    'transfer_out' || 'transfer_in' => Icons.compare_arrows,
+    _ => Icons.circle_outlined,
+  };
 
   String _labelFor(String type) => switch (type) {
-        'purchase' => 'Purchased',
-        'sale' => 'Sold',
-        'sales_return' => 'Returned by customer',
-        'purchase_return' => 'Returned to distributor',
-        'transfer_out' => 'Transferred out',
-        'transfer_in' => 'Transferred in',
-        _ => type,
-      };
+    'purchase' => 'Purchased',
+    'sale' => 'Sold',
+    'sales_return' => 'Returned by customer',
+    'purchase_return' => 'Returned to distributor',
+    'transfer_out' => 'Transferred out',
+    'transfer_in' => 'Transferred in',
+    _ => type,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -74,10 +88,15 @@ class _ImeiHistoryScreenState extends ConsumerState<ImeiHistoryScreen> {
           children: [
             TextField(
               controller: _searchController,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
                 hintText: 'Enter or scan an IMEI…',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  tooltip: 'Scan IMEI',
+                  onPressed: _searching ? null : _scanAndSearch,
+                  icon: const Icon(Icons.qr_code_scanner),
+                ),
               ),
               onSubmitted: (_) => _search(),
             ),
@@ -85,11 +104,19 @@ class _ImeiHistoryScreenState extends ConsumerState<ImeiHistoryScreen> {
             FilledButton(
               onPressed: _searching ? null : _search,
               child: _searching
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
                   : const Text('Search'),
             ),
             const SizedBox(height: 16),
-            if (_error != null) Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            if (_error != null)
+              Text(
+                _error!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             if (_searched && _history == null && _error == null && !_searching)
               const Text('No unit found with that IMEI.'),
             if (_history != null) Expanded(child: _buildHistory(_history!)),
@@ -109,20 +136,42 @@ class _ImeiHistoryScreenState extends ConsumerState<ImeiHistoryScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  history.isDemo ? '${history.displayName} · DEMO DEVICE' : history.displayName,
+                  history.isDemo
+                      ? '${history.displayName} · DEMO DEVICE'
+                      : history.displayName,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: history.isDemo ? Colors.red.shade700 : null,
-                        fontWeight: history.isDemo ? FontWeight.bold : null,
-                      ),
+                    color: history.isDemo ? Colors.red.shade700 : null,
+                    fontWeight: history.isDemo ? FontWeight.bold : null,
+                  ),
                 ),
                 Text('IMEI 1: ${history.imei1}'),
                 if (history.imei2 != null) Text('IMEI 2: ${history.imei2}'),
                 Text('Status: ${history.status}'),
-                Text('Distributor: ${history.distributor}'),
-                if (history.purchasedAt != null) Text('Purchased: ${history.purchasedAt}'),
-                if (history.soldAt != null) Text('Sold: ${history.soldAt}'),
-                if (history.purchaseCost != null)
-                  Text('Purchase cost: ${history.purchaseCost!.toStringAsFixed(2)}'),
+                if (history.status == 'sold') ...[
+                  if (history.soldAt != null) Text('Sold: ${history.soldAt}'),
+                  if (_latestSale(history) case final sale?) ...[
+                    if (sale.saleUnitPrice != null)
+                      Text(
+                        'Sale price: ৳${sale.saleUnitPrice!.toStringAsFixed(2)}',
+                      ),
+                    if (sale.saleDiscount != null && sale.saleDiscount! > 0)
+                      Text(
+                        'Discount: ৳${sale.saleDiscount!.toStringAsFixed(2)}',
+                      ),
+                    if (sale.saleTotal != null)
+                      Text(
+                        'Sale total: ৳${sale.saleTotal!.toStringAsFixed(2)}',
+                      ),
+                  ],
+                ] else ...[
+                  Text('Distributor: ${history.distributor}'),
+                  if (history.purchasedAt != null)
+                    Text('Purchased: ${history.purchasedAt}'),
+                  if (history.purchaseCost != null)
+                    Text(
+                      'Purchase cost: ${history.purchaseCost!.toStringAsFixed(2)}',
+                    ),
+                ],
               ],
             ),
           ),
@@ -134,10 +183,29 @@ class _ImeiHistoryScreenState extends ConsumerState<ImeiHistoryScreen> {
           ListTile(
             leading: Icon(_iconFor(movement.type)),
             title: Text(_labelFor(movement.type)),
-            subtitle: Text('${movement.date} · ${movement.branch}'),
-            trailing: movement.unitCost != null ? Text(movement.unitCost!.toStringAsFixed(2)) : null,
+            subtitle: Text(
+              [
+                movement.saleDate ?? movement.date,
+                movement.branch,
+                if (movement.saleInvoiceNumber != null)
+                  'Invoice ${movement.saleInvoiceNumber}',
+                if (movement.saleCustomer != null) movement.saleCustomer!,
+              ].join(' · '),
+            ),
+            trailing: movement.saleTotal != null
+                ? Text('৳${movement.saleTotal!.toStringAsFixed(2)}')
+                : movement.unitCost != null
+                ? Text('৳${movement.unitCost!.toStringAsFixed(2)}')
+                : null,
           ),
       ],
     );
+  }
+
+  ImeiHistoryMovement? _latestSale(ImeiHistory history) {
+    for (final movement in history.movements.reversed) {
+      if (movement.type == 'sale') return movement;
+    }
+    return null;
   }
 }
