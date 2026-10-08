@@ -5,14 +5,31 @@ import '../../../core/auth/auth_state.dart';
 import '../application/distributor_providers.dart';
 import '../models/distributor.dart';
 import 'distributor_form_screen.dart';
+import 'widgets/pay_distributor_dialog.dart';
 
-class DistributorDetailScreen extends ConsumerWidget {
+class DistributorDetailScreen extends ConsumerStatefulWidget {
   const DistributorDetailScreen({super.key, required this.distributor});
 
   final Distributor distributor;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DistributorDetailScreen> createState() => _DistributorDetailScreenState();
+}
+
+class _DistributorDetailScreenState extends ConsumerState<DistributorDetailScreen> {
+  late Distributor _distributor = widget.distributor;
+
+  Future<void> _pay() async {
+    final updated = await showPayDistributorDialog(context, ref, _distributor);
+    if (updated == null || !mounted) return;
+    setState(() => _distributor = updated);
+    ref.invalidate(distributorLedgerProvider(_distributor.id));
+    ref.invalidate(distributorsProvider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final distributor = _distributor;
     final ledgerAsync = ref.watch(distributorLedgerProvider(distributor.id));
     final canManage = ref.watch(authControllerProvider).user?.can('distributors.manage') ?? false;
 
@@ -59,6 +76,14 @@ class DistributorDetailScreen extends ConsumerWidget {
                           fontWeight: FontWeight.bold,
                         ),
                   ),
+                  if (canManage && distributor.currentBalance > 0) ...[
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: _pay,
+                      icon: const Icon(Icons.payments_outlined),
+                      label: const Text('Pay Distributor'),
+                    ),
+                  ],
                 ],
               ),
             ),

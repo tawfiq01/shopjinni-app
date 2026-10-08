@@ -113,6 +113,23 @@ class DistributorRepository {
         final res = await _dio.get('/distributors/$id/ledger');
         return (res.data['lines'] as List).map((e) => LedgerLine.fromJson(e)).toList();
       });
+
+  Future<Distributor> payDue(
+    int id, {
+    required int paymentMethodId,
+    required double amount,
+    String? referenceNo,
+    String? notes,
+  }) =>
+      _run(() async {
+        final res = await _dio.post('/distributors/$id/payments', data: {
+          'payment_method_id': paymentMethodId,
+          'amount': amount,
+          'reference_no': ?referenceNo,
+          'notes': ?notes,
+        });
+        return Distributor.fromJson(res.data['distributor']);
+      });
 }
 
 final distributorRepositoryProvider = Provider<DistributorRepository>((ref) {
