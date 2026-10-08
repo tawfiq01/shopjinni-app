@@ -1,3 +1,14 @@
+// Laravel's `decimal:N` casts (used on every money/cost column) serialize
+// to JSON as strings (e.g. "20000.00"), not numbers — `as num` crashes the
+// instant a backend field changes from a plain column to a decimal cast.
+// These helpers accept either so a cast-type change on the backend can't
+// silently break every report screen that reads a cost/total field.
+double _toDouble(dynamic value) =>
+    value is num ? value.toDouble() : double.parse(value as String);
+
+double? _toDoubleOrNull(dynamic value) =>
+    value == null ? null : _toDouble(value);
+
 class StockReportRow {
   const StockReportRow({
     required this.skuId,
@@ -31,10 +42,8 @@ class StockReportRow {
     reorderLevel: json['reorder_level'] as int,
     isLowStock: json['is_low_stock'] as bool,
     imeiTrackingEnabled: json['imei_tracking_enabled'] as bool,
-    unitCost: json['unit_cost'] == null
-        ? null
-        : (json['unit_cost'] as num).toDouble(),
-    value: json['value'] == null ? null : (json['value'] as num).toDouble(),
+    unitCost: _toDoubleOrNull(json['unit_cost']),
+    value: _toDoubleOrNull(json['value']),
   );
 
   final int skuId;
@@ -65,9 +74,7 @@ class StockReport {
     rows: (json['data'] as List<dynamic>)
         .map((e) => StockReportRow.fromJson(e as Map<String, dynamic>))
         .toList(),
-    totalValue: json['total_value'] == null
-        ? null
-        : (json['total_value'] as num).toDouble(),
+    totalValue: _toDoubleOrNull(json['total_value']),
   );
 
   final List<StockReportRow> rows;
@@ -83,7 +90,7 @@ class DailyTotal {
 
   factory DailyTotal.fromJson(Map<String, dynamic> json) => DailyTotal(
     date: json['date'] as String,
-    total: (json['total'] as num).toDouble(),
+    total: _toDouble(json['total']),
     count: json['count'] as int,
   );
 
@@ -103,7 +110,7 @@ class SalesGroupTotal {
       SalesGroupTotal(
         name: json[nameKey] as String,
         quantity: json['quantity'] as int,
-        total: (json['total'] as num).toDouble(),
+        total: _toDouble(json['total']),
       );
 
   final String name;
@@ -120,7 +127,7 @@ class NamedTotal {
 
   factory NamedTotal.fromJson(Map<String, dynamic> json) => NamedTotal(
     name: json['name'] as String,
-    total: (json['total'] as num).toDouble(),
+    total: _toDouble(json['total']),
     count: json['count'] as int,
   );
 
@@ -149,12 +156,10 @@ class SalesSummary {
     from: json['from'] as String,
     to: json['to'] as String,
     invoiceCount: json['invoice_count'] as int,
-    totalSales: (json['total_sales'] as num).toDouble(),
-    totalDiscount: (json['total_discount'] as num).toDouble(),
-    totalDue: (json['total_due'] as num).toDouble(),
-    totalProfit: json['total_profit'] == null
-        ? null
-        : (json['total_profit'] as num).toDouble(),
+    totalSales: _toDouble(json['total_sales']),
+    totalDiscount: _toDouble(json['total_discount']),
+    totalDue: _toDouble(json['total_due']),
+    totalProfit: _toDoubleOrNull(json['total_profit']),
     byDay: (json['by_day'] as List<dynamic>? ?? [])
         .map((e) => DailyTotal.fromJson(e as Map<String, dynamic>))
         .toList(),
@@ -222,13 +227,11 @@ class SalesDetailRow {
     imei: json['imei'] as String?,
     isDemo: json['is_demo'] as bool? ?? false,
     quantity: json['quantity'] as int,
-    unitPrice: (json['unit_price'] as num).toDouble(),
-    discount: (json['discount'] as num).toDouble(),
-    lineTotal: (json['line_total'] as num).toDouble(),
-    unitCost: json['unit_cost'] == null
-        ? null
-        : (json['unit_cost'] as num).toDouble(),
-    profit: json['profit'] == null ? null : (json['profit'] as num).toDouble(),
+    unitPrice: _toDouble(json['unit_price']),
+    discount: _toDouble(json['discount']),
+    lineTotal: _toDouble(json['line_total']),
+    unitCost: _toDoubleOrNull(json['unit_cost']),
+    profit: _toDoubleOrNull(json['profit']),
   );
 
   final String invoiceNumber;
@@ -265,10 +268,8 @@ class SalesDetailReport {
         from: json['from'] as String,
         to: json['to'] as String,
         totalQuantity: json['total_quantity'] as int,
-        totalSales: (json['total_sales'] as num).toDouble(),
-        totalProfit: json['total_profit'] == null
-            ? null
-            : (json['total_profit'] as num).toDouble(),
+        totalSales: _toDouble(json['total_sales']),
+        totalProfit: _toDoubleOrNull(json['total_profit']),
         rows: (json['rows'] as List<dynamic>? ?? [])
             .map((e) => SalesDetailRow.fromJson(e as Map<String, dynamic>))
             .toList(),
@@ -292,7 +293,7 @@ class DistributorPurchaseTotal {
   factory DistributorPurchaseTotal.fromJson(Map<String, dynamic> json) =>
       DistributorPurchaseTotal(
         distributorName: json['distributor_name'] as String,
-        total: (json['total'] as num).toDouble(),
+        total: _toDouble(json['total']),
         count: json['count'] as int,
       );
 
@@ -315,8 +316,8 @@ class PurchaseProductTotal {
         skuId: json['sku_id'] as int,
         displayName: json['display_name'] as String,
         quantity: json['quantity'] as int,
-        total: (json['total'] as num).toDouble(),
-        avgUnitCost: (json['avg_unit_cost'] as num).toDouble(),
+        total: _toDouble(json['total']),
+        avgUnitCost: _toDouble(json['avg_unit_cost']),
       );
 
   final int skuId;
@@ -342,8 +343,8 @@ class PurchaseSummary {
         from: json['from'] as String,
         to: json['to'] as String,
         invoiceCount: json['invoice_count'] as int,
-        totalPurchases: (json['total_purchases'] as num).toDouble(),
-        totalDue: (json['total_due'] as num).toDouble(),
+        totalPurchases: _toDouble(json['total_purchases']),
+        totalDue: _toDouble(json['total_due']),
         byDistributor: (json['by_distributor'] as List<dynamic>? ?? [])
             .map(
               (e) =>
@@ -384,7 +385,7 @@ class PurchasePriceHistoryRow {
         invoiceNumber: json['invoice_number'] as String,
         distributorName: json['distributor_name'] as String,
         quantity: json['quantity'] as int,
-        unitCost: (json['unit_cost'] as num).toDouble(),
+        unitCost: _toDouble(json['unit_cost']),
         remainingQuantity: json['remaining_quantity'] as int,
       );
 
@@ -409,7 +410,7 @@ class DueRow {
     id: json['id'] as int,
     name: json['name'] as String,
     mobile: json['mobile'] as String,
-    due: (json['due'] as num).toDouble(),
+    due: _toDouble(json['due']),
   );
 
   final int id;
@@ -433,8 +434,8 @@ class DuesReport {
     distributors: (json['distributors'] as List<dynamic>? ?? [])
         .map((e) => DueRow.fromJson(e as Map<String, dynamic>))
         .toList(),
-    totalCustomerDue: (json['total_customer_due'] as num).toDouble(),
-    totalDistributorDue: (json['total_distributor_due'] as num).toDouble(),
+    totalCustomerDue: _toDouble(json['total_customer_due']),
+    totalDistributorDue: _toDouble(json['total_distributor_due']),
   );
 
   final List<DueRow> customers;
@@ -464,21 +465,13 @@ class ImeiHistoryMovement {
         type: json['type'] as String,
         branch: json['branch'] as String,
         quantityChange: json['quantity_change'] as int,
-        unitCost: json['unit_cost'] == null
-            ? null
-            : (json['unit_cost'] as num).toDouble(),
+        unitCost: _toDoubleOrNull(json['unit_cost']),
         saleDate: json['sale_date'] as String?,
         saleInvoiceNumber: json['sale_invoice_number'] as String?,
         saleCustomer: json['sale_customer'] as String?,
-        saleUnitPrice: json['sale_unit_price'] == null
-            ? null
-            : (json['sale_unit_price'] as num).toDouble(),
-        saleDiscount: json['sale_discount'] == null
-            ? null
-            : (json['sale_discount'] as num).toDouble(),
-        saleTotal: json['sale_total'] == null
-            ? null
-            : (json['sale_total'] as num).toDouble(),
+        saleUnitPrice: _toDoubleOrNull(json['sale_unit_price']),
+        saleDiscount: _toDoubleOrNull(json['sale_discount']),
+        saleTotal: _toDoubleOrNull(json['sale_total']),
       );
 
   final String date;
@@ -521,9 +514,7 @@ class ImeiHistory {
       isDemo: unit['is_demo'] as bool? ?? false,
       purchasedAt: unit['purchased_at'] as String?,
       soldAt: unit['sold_at'] as String?,
-      purchaseCost: unit['purchase_cost'] == null
-          ? null
-          : (unit['purchase_cost'] as num).toDouble(),
+      purchaseCost: _toDoubleOrNull(unit['purchase_cost']),
       movements: (json['movements'] as List<dynamic>? ?? [])
           .map((e) => ImeiHistoryMovement.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -577,7 +568,7 @@ class CashPositionRow {
       CashPositionRow(
         method: json['method'] as String,
         accountCode: json['account_code'] as String,
-        balance: (json['balance'] as num).toDouble(),
+        balance: _toDouble(json['balance']),
       );
 
   final String method;
