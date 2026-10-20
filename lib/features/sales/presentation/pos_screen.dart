@@ -203,12 +203,16 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isWide = constraints.maxWidth > 800;
-          final searchAndCart = _buildSearchAndCart();
-          final checkoutPanel = _buildCheckoutPanel(customersAsync, paymentMethodsAsync);
+          final searchAndCart = _buildSearchAndCart(scrollableCart: isWide);
+          final checkoutPanel = _buildCheckoutPanel(
+            customersAsync,
+            paymentMethodsAsync,
+            scrollable: isWide,
+          );
 
           if (isWide) {
             return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Expanded(flex: 3, child: searchAndCart),
                 SizedBox(width: 360, child: checkoutPanel),
@@ -221,12 +225,10 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     );
   }
 
-  Widget _buildSearchAndCart() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+  Widget _buildSearchAndCart({required bool scrollableCart}) {
+    final header = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
           TextField(
             controller: _searchController,
             decoration: InputDecoration(
@@ -297,8 +299,36 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           const SizedBox(height: 16),
           Text('Cart', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
-          if (_cart.isEmpty) const Text('Cart is empty — search above to add items.'),
-          for (final line in _cart) _buildCartRow(line),
+      ],
+    );
+
+    if (_cart.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            header,
+            const Text('Cart is empty — search above to add items.'),
+          ],
+        ),
+      );
+    }
+
+    final cartList = ListView.builder(
+      shrinkWrap: !scrollableCart,
+      physics: scrollableCart ? null : const NeverScrollableScrollPhysics(),
+      itemCount: _cart.length,
+      itemBuilder: (context, index) => _buildCartRow(_cart[index]),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          header,
+          scrollableCart ? Expanded(child: Scrollbar(child: cartList)) : cartList,
         ],
       ),
     );
@@ -402,14 +432,10 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
   Widget _buildCheckoutPanel(
     AsyncValue<List<Customer>> customersAsync,
-    AsyncValue<List<PaymentMethodOption>> paymentMethodsAsync,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
+    AsyncValue<List<PaymentMethodOption>> paymentMethodsAsync, {
+    required bool scrollable,
+  }) {
+    final content = Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               customersAsync.when(
@@ -499,7 +525,14 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     : const Text('Complete Sale'),
               ),
             ],
-          ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: scrollable ? SingleChildScrollView(child: content) : content,
         ),
       ),
     );
