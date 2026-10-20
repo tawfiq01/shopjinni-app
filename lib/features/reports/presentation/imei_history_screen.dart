@@ -147,6 +147,13 @@ class _ImeiHistoryScreenState extends ConsumerState<ImeiHistoryScreen> {
                 Text('IMEI 1: ${history.imei1}'),
                 if (history.imei2 != null) Text('IMEI 2: ${history.imei2}'),
                 Text('Status: ${history.status}'),
+                Text('Distributor: ${history.distributor}'),
+                if (history.purchasedAt != null)
+                  Text('Purchased: ${history.purchasedAt}'),
+                if (history.purchaseCost != null)
+                  Text(
+                    'Purchase cost: ${history.purchaseCost!.toStringAsFixed(2)}',
+                  ),
                 if (history.status == 'sold') ...[
                   if (history.soldAt != null) Text('Sold: ${history.soldAt}'),
                   if (_latestSale(history) case final sale?) ...[
@@ -163,14 +170,6 @@ class _ImeiHistoryScreenState extends ConsumerState<ImeiHistoryScreen> {
                         'Sale total: ৳${sale.saleTotal!.toStringAsFixed(2)}',
                       ),
                   ],
-                ] else ...[
-                  Text('Distributor: ${history.distributor}'),
-                  if (history.purchasedAt != null)
-                    Text('Purchased: ${history.purchasedAt}'),
-                  if (history.purchaseCost != null)
-                    Text(
-                      'Purchase cost: ${history.purchaseCost!.toStringAsFixed(2)}',
-                    ),
                 ],
               ],
             ),
