@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/auth/auth_state.dart';
+import '../../../core/widgets/confirm_delete_dialog.dart';
 import '../application/customer_providers.dart';
+import '../data/customer_repository.dart';
 import '../models/customer.dart';
 import 'customer_form_screen.dart';
 
@@ -20,13 +22,44 @@ class CustomerDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(customer.name),
         actions: [
-          if (canManage)
+          if (canManage) ...[
             IconButton(
               icon: const Icon(Icons.edit_outlined),
               onPressed: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => CustomerFormScreen(customer: customer),
               )),
             ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              tooltip: 'Delete customer',
+              onPressed: () async {
+                final confirmed = await confirmDelete(
+                  context,
+                  title: 'Delete "${customer.name}"?',
+                );
+                if (!confirmed || !context.mounted) return;
+                try {
+                  await ref.read(customerRepositoryProvider).deleteCustomer(customer.id);
+                  ref.invalidate(customersProvider);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Customer deleted.')),
+                    );
+                    Navigator.of(context).pop();
+                  }
+                } on CustomerException catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(e.message),
+                        backgroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
         ],
       ),
       body: ListView(

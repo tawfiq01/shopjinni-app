@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/confirm_delete_dialog.dart';
 import '../application/catalog_providers.dart';
 import '../data/catalog_repository.dart';
 import 'model_detail_screen.dart';
@@ -133,7 +134,27 @@ class _BrandsTab extends ConsumerWidget {
               return ListTile(
                 title: Text(brand.name),
                 subtitle: brand.isActive ? null : const Text('Inactive'),
-                trailing: const Icon(Icons.edit_outlined, size: 20),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.edit_outlined, size: 20),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      tooltip: 'Delete brand',
+                      onPressed: () async {
+                        final confirmed = await confirmDelete(context, title: 'Delete "${brand.name}"?');
+                        if (!confirmed || !context.mounted) return;
+                        try {
+                          await ref.read(catalogRepositoryProvider).deleteBrand(brand.id);
+                          ref.invalidate(brandsProvider);
+                          if (context.mounted) showSuccessSnackBar(context, 'Brand deleted.');
+                        } on CatalogException catch (e) {
+                          if (context.mounted) showErrorSnackBar(context, e.message);
+                        }
+                      },
+                    ),
+                  ],
+                ),
                 onTap: () async {
                   final name = await promptForText(
                     context,
@@ -197,7 +218,27 @@ class _CategoriesTab extends ConsumerWidget {
               return ListTile(
                 title: Text(type.name),
                 subtitle: type.isActive ? null : const Text('Inactive'),
-                trailing: const Icon(Icons.edit_outlined, size: 20),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.edit_outlined, size: 20),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      tooltip: 'Delete category',
+                      onPressed: () async {
+                        final confirmed = await confirmDelete(context, title: 'Delete "${type.name}"?');
+                        if (!confirmed || !context.mounted) return;
+                        try {
+                          await ref.read(catalogRepositoryProvider).deleteProductType(type.id);
+                          ref.invalidate(productTypesProvider);
+                          if (context.mounted) showSuccessSnackBar(context, 'Category deleted.');
+                        } on CatalogException catch (e) {
+                          if (context.mounted) showErrorSnackBar(context, e.message);
+                        }
+                      },
+                    ),
+                  ],
+                ),
                 onTap: () async {
                   final name = await promptForText(
                     context,
@@ -261,7 +302,27 @@ class _ColorsTab extends ConsumerWidget {
               return ListTile(
                 leading: _swatch(color.hexCode),
                 title: Text(color.name),
-                trailing: const Icon(Icons.edit_outlined, size: 20),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.edit_outlined, size: 20),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      tooltip: 'Delete color',
+                      onPressed: () async {
+                        final confirmed = await confirmDelete(context, title: 'Delete "${color.name}"?');
+                        if (!confirmed || !context.mounted) return;
+                        try {
+                          await ref.read(catalogRepositoryProvider).deleteColor(color.id);
+                          ref.invalidate(colorsProvider);
+                          if (context.mounted) showSuccessSnackBar(context, 'Color deleted.');
+                        } on CatalogException catch (e) {
+                          if (context.mounted) showErrorSnackBar(context, e.message);
+                        }
+                      },
+                    ),
+                  ],
+                ),
                 onTap: () async {
                   final result = await promptForColor(
                     context,

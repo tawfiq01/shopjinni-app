@@ -59,6 +59,9 @@ class CatalogRepository {
         return Brand.fromJson(res.data['data']);
       });
 
+  Future<void> deleteBrand(int id) =>
+      _runAsync(() => _dio.delete('/catalog/brands/$id'));
+
   Future<List<ProductType>> getProductTypes() => _runAsync(() async {
     final res = await _dio.get('/catalog/product-types');
     return (res.data['data'] as List)
@@ -79,6 +82,9 @@ class CatalogRepository {
         );
         return ProductType.fromJson(res.data['data']);
       });
+
+  Future<void> deleteProductType(int id) =>
+      _runAsync(() => _dio.delete('/catalog/product-types/$id'));
 
   Future<List<ProductColor>> getColors() => _runAsync(() async {
     final res = await _dio.get('/catalog/colors');
@@ -107,6 +113,9 @@ class CatalogRepository {
         );
         return ProductColor.fromJson(res.data['data']);
       });
+
+  Future<void> deleteColor(int id) =>
+      _runAsync(() => _dio.delete('/catalog/colors/$id'));
 
   Future<List<CatalogModel>> getModels({String? search, int? brandId}) =>
       _runAsync(() async {
@@ -187,6 +196,9 @@ class CatalogRepository {
     );
     return CatalogModel.fromJson(res.data['data']);
   });
+
+  Future<void> deleteModel(int id) =>
+      _runAsync(() => _dio.delete('/catalog/models/$id'));
 
   Future<ProductVariant> createVariant({
     required int modelId,

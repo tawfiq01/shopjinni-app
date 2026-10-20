@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/confirm_delete_dialog.dart';
 import '../application/catalog_providers.dart';
 import '../data/catalog_repository.dart';
 import '../models/catalog_models.dart';
@@ -20,12 +21,34 @@ class ModelDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Model Details'),
         actions: [
-          if (loadedModel != null)
+          if (loadedModel != null) ...[
             IconButton(
               icon: const Icon(Icons.edit_outlined),
               tooltip: 'Edit model',
               onPressed: () => showEditModelDialog(context, ref, loadedModel),
             ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              tooltip: 'Delete model',
+              onPressed: () async {
+                final confirmed = await confirmDelete(
+                  context,
+                  title: 'Delete "${loadedModel.name}"?',
+                );
+                if (!confirmed || !context.mounted) return;
+                try {
+                  await ref.read(catalogRepositoryProvider).deleteModel(loadedModel.id);
+                  ref.invalidate(modelsProvider);
+                  if (context.mounted) {
+                    showSuccessSnackBar(context, 'Model deleted.');
+                    Navigator.of(context).pop();
+                  }
+                } on CatalogException catch (e) {
+                  if (context.mounted) showErrorSnackBar(context, e.message);
+                }
+              },
+            ),
+          ],
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
